@@ -50,6 +50,7 @@ namespace RicaBotpaw
 
 		public async Task onJoin(SocketGuildUser user)
 		{
+			var channel = _client.GetChannel(YOUR CHANNEL ID HERE) as SocketTextChannel;
 			await channel.SendMessageAsync(user.Username + " has entered the server! UwU");
 			var result = Database.CheckExistingUser(user);
 
@@ -61,6 +62,7 @@ namespace RicaBotpaw
 
 		public async Task onLeave(SocketGuildUser user)
 		{
+			var channel = _client.GetChannel(YOUR CHANNEL ID HERE) as SocketTextChannel;
 			await channel.SendMessageAsync(user.Username + " has left us all alone...\n*cries*");
 		}
 

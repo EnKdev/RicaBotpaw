@@ -79,7 +79,9 @@ namespace RicaBotpaw.Modules.Data
 			return null;
 		}
 
+		public static List<YOUR tableName.cs HERE> GetUserStatus(IUser user)
 		{
+			var result = new List<YOUR tableName.cs HERE>();
 
 			var database = new Database("YOUR DATABASE HERE");
 
