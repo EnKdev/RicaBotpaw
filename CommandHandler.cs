@@ -83,6 +83,7 @@ namespace RicaBotpaw
 			if (userData.XP >= xpToLevelUp)
 			{
 				Database.levelUp(user, xp);
+				Database.AddMoney(user);
 
 				var embed = new EmbedBuilder();
 				embed.WithColor(new Color(0x4d006d)).AddField(y =>

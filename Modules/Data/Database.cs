@@ -170,5 +170,25 @@ namespace RicaBotpaw.Modules.Data
 				return;
 			}
 		}
+
+		public static void AddMoney(IUser user)
+		{
+			var database = new Database("YOUR DATABASE HERE");
+
+			try
+			{
+				var moneyToAdd = 50;
+				var strings = $"UPDATE `YOUR TABLE HERE` SET money = money + {moneyToAdd} where user_id = {user.Id.ToString()}";
+				var reader = database.FireCommand(strings);
+				reader.Close();
+				database.CloseConnection();
+				return;
+			}
+			catch (Exception e)
+			{
+				database.CloseConnection();
+				return;
+			}
+		}
 	}
 }
