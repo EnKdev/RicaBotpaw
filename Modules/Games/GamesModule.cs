@@ -1,11 +1,20 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using System.Runtime.InteropServices;
-using System.Diagnostics;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using System.IO;
+using System.Net.Http;
+using ImageSharp;
+using ImageSharp.Drawing.Pens;
+using ImageSharp.Drawing.Brushes;
+using ImageSharp.Processing;
+using SixLabors.Fonts;
+using SixLabors.Primitives;
+using System.Numerics;
+using ImageSharp.Dithering;
+using RicaBotpaw.ImageCore;
 
 namespace RicaBotpaw.Modules.Games
 {
@@ -180,6 +189,83 @@ namespace RicaBotpaw.Modules.Games
 					await ReplyAsync("There is no fight at the moment. Sorry!");
 				}
 			}
+		}
+
+		[Command("spin")]
+		[Remarks("If you can't decide who to pick, use this.")]
+		public async Task ArrowSpinAsync(IGuildUser _user1 = null, IGuildUser _user2 = null, IGuildUser _user3 = null, IGuildUser _user4 = null)
+		{
+			Random rand = new Random();
+			IVoiceChannel channel2 = null;
+
+			IGuildUser[] randomUsers = new IGuildUser[4];
+
+			try
+			{
+				channel2 = (Context.User as IVoiceState).VoiceChannel;
+				var vc = channel2 as SocketVoiceChannel;
+				var voiceUsers = vc.Users;
+
+				randomUsers[0] = voiceUsers.ElementAt(0);
+				randomUsers[1] = voiceUsers.ElementAt(1);
+				randomUsers[2] = voiceUsers.ElementAt(2);
+				randomUsers[3] = voiceUsers.ElementAt(3);
+			}
+			catch
+			{
+				var users = await Context.Guild.GetUsersAsync();
+				randomUsers[0] = users.ElementAt(rand.Next(0, users.Count));
+				randomUsers[1] = users.ElementAt(rand.Next(0, users.Count));
+				randomUsers[2] = users.ElementAt(rand.Next(0, users.Count));
+				randomUsers[3] = users.ElementAt(rand.Next(0, users.Count));
+			}
+
+			if (_user1 != null) randomUsers[0] = _user1;
+			if (_user2 != null) randomUsers[1] = _user2;
+			if (_user3 != null) randomUsers[2] = _user3;
+			if (_user4 != null) randomUsers[3] = _user4;
+
+			ImageCore.ImageCore core = new ImageCore.ImageCore();
+
+			ImageSharp.Image<Rgba32> user1 = await core.StartStreamAsync(randomUsers[0]);
+			ImageSharp.Image<Rgba32> user2 = await core.StartStreamAsync(randomUsers[1]);
+			ImageSharp.Image<Rgba32> user3 = await core.StartStreamAsync(randomUsers[2]);
+			ImageSharp.Image<Rgba32> user4 = await core.StartStreamAsync(randomUsers[3]);
+
+			ImageSharp.Image<Rgba32> arrow = await core.StartStreamAsync(path: "C:/Users/LordaS/Desktop/Rica Botpaw/RicaBotpaw/images/arrow.png");
+
+			ImageSharp.Image<Rgba32> finalImg = new ImageSharp.Image<Rgba32>(500, 500);
+
+			Size size250 = new Size(250, 250);
+			Size size500 = new Size(500, 500);
+
+			user1.Resize(size250);
+			user2.Resize(size250);
+			user3.Resize(size250);
+			user4.Resize(size250);
+
+			finalImg.DrawImage(user1, 1f, size250, new Point(0, 0));
+			finalImg.DrawImage(user2, 1f, size250, new Point(250, 0));
+			finalImg.DrawImage(user3, 1f, size250, new Point(0, 250));
+			finalImg.DrawImage(user4, 1f, size250, new Point(250, 250));
+
+			float dir = rand.Next(0, 360);
+			string winner = null;
+
+			if (dir > 270 && dir < 360) winner = randomUsers[0].Username;
+			if (dir > 0 && dir < 90) winner = randomUsers[1].Username;
+			if (dir > 90 && dir < 180) winner = randomUsers[3].Username;
+			if (dir > 180 && dir < 270) winner = randomUsers[2].Username;
+
+			if (winner == null) winner = "No one, try again";
+
+			arrow.Rotate(dir);
+
+			finalImg.DrawImage(arrow, 1f, size500, new Point(0, 0));
+
+			await core.StopStreamAsync(Context.Message, finalImg);
+
+			await Context.Channel.SendMessageAsync($"The spinner is pointing at **{winner}**");
 		}
     }
 }

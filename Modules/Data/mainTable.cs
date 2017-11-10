@@ -2,7 +2,6 @@
 
 namespace RicaBotpaw.Modules.Data
 {
-	public class tableName // You want to rename this if you are using a db
 	{
 		public string UserId { get; set; }
 		public string Username { get; set; }

@@ -8,10 +8,10 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Text;
 using RicaBotpaw.Modules.Data;
+using RicaBotpaw.ImageCore;
 
 namespace RicaBotpaw.Modules.Public
 {
-
 	public class PublicModule : ModuleBase
 	{
 		private CommandService _service;
@@ -97,7 +97,7 @@ namespace RicaBotpaw.Modules.Public
 		[Remarks("Sets a new game for the bot")]
 		public async Task setGame([Remainder] string game)
 		{
-			if (!(Context.User.Id == 112559794543468544))
+			if (!(Context.User.Id == YOUR ID HERE))
 			{
 				await Context.Channel.SendMessageAsync("You do not have permission to change my game. Contact EnK_#8906 if you think this is wrong");
 			}
@@ -155,6 +155,24 @@ namespace RicaBotpaw.Modules.Public
 					y.Name = "Discord.NET Version";
 					y.Value = DiscordConfig.Version;
 					y.IsInline = true;
+				})
+				.AddField(y =>
+				{
+					y.Name = "RBIC Version";
+					y.Value = ImageCoreConfig.Version;
+					y.IsInline = true;
+				})
+				.AddField(y =>
+				{
+					y.Name = "RBIC Build Revision";
+					y.Value = ImageCoreConfig.BuildRevision;
+					y.IsInline = true;
+				})
+				.AddField(y =>
+				{
+					y.Name = "Github Repository";
+					y.Value = "[Github](https://github.com/TheRealDreamzy/RicaBotpaw)";
+					y.IsInline = false;
 				})
 				.AddField(y =>
 				{
@@ -261,7 +279,7 @@ namespace RicaBotpaw.Modules.Public
 			{
 				foreach (var user in Context.Guild.GetUsersAsync().Result)
 				{
-					if (user.Id == 112559794543468544) // Don't change this. This is for forwarding messages to me if you want to request something for the bot!
+					if (user.Id == 112559794543468544) // Do not change this! This is good for bug reports, requests, etc.
 					{
 						me = user;
 						myId = user.Mention;
@@ -318,13 +336,12 @@ namespace RicaBotpaw.Modules.Public
 			}
 
 			var tableName = Database.GetUserStatus(user);
-			embed.Description = (Context.User.Mention + "\n\n" + user.Username + "'s current status is as followed: \n" 
-				+ ":small_blue_diamond:" + "UserID: " + tableName.FirstOrDefault().UserId + "\n" 
+			embed.Description = (Context.User.Mention + "\n\n" + user.Username + "'s current status is as followed: \n"
+				+ ":small_blue_diamond:" + "UserID: " + tableName.FirstOrDefault().UserId + "\n"
 				+ ":small_blue_diamond:" + tableName.FirstOrDefault().Tokens + " tokens!\n"
 				+ ":small_blue_diamond: Current custom rank: " + tableName.FirstOrDefault().Rank + "\n"
-				+ ":dollar: " + tableName.FirstOrDefault().Money + " Rica-Dollar!\n"
 				+ ":small_blue_diamond: Level: " + tableName.FirstOrDefault().Level + "\n"
-				+ ":small_blue_diamond: XP: " + tableName.FirstOrDefault().XP);
+				+ ":small_blue_diamond: XP: " + tableName.FirstOrDefault().XP + "\n");
 
 			await Context.Channel.SendMessageAsync("", false, embed);
 		}
@@ -355,6 +372,110 @@ namespace RicaBotpaw.Modules.Public
 			{
 				Database.ChangeTokens(user, tokens);
 				await ReplyAsync(user.Mention + ", you were awarded with " + tokens + " tokens!");
+			}
+		}
+
+		// Economy related.
+		[Group("Currency")]
+		public class Economy : ModuleBase
+		{
+			[Command("openbank")]
+			[Remarks("Opens your bank account! Woah!")]
+			public async Task bankC()
+			{
+				var application = await Context.Client.GetApplicationInfoAsync();
+				var auth = new EmbedAuthorBuilder();
+
+				var result = Database.CheckMoneyExistingUser(Context.User);
+				if (result.Count() <= 0)
+				{
+					Database.cBank(Context.User);
+
+					var embed = new EmbedBuilder()
+					{
+						Color = new Color(29, 140, 209),
+						Author = auth
+					};
+
+					embed.Title = $"{Context.User.Username} has opened a bank-account!";
+					embed.Description = $"\n:dollar: **Welcome to the bank!** :\n\n**Bank : Unknown**\n";
+
+					await ReplyAsync("", false, embed.Build());
+				}
+			}
+
+			[Command("balance")]
+			[Remarks("Returns your current balance")]
+			public async Task MoneyOl()
+			{
+				var application = await Context.Client.GetApplicationInfoAsync();
+				var auth = new EmbedAuthorBuilder();
+
+				var moneydiscord = Database.GetUserMoney(Context.User);
+
+				var embed = new EmbedBuilder()
+				{
+					Color = new Color(29, 140, 209),
+					Author = auth
+				};
+
+				embed.Title = $"{Context.User.Username}'s Balance";
+				embed.Description = $"\n:dollar: **Balance**:\n\n**{moneydiscord.FirstOrDefault().Money}**\n";
+
+				await ReplyAsync("", false, embed.Build());
+			}
+
+			[Command("givemoney")]
+			[Remarks("Adds money to a user.")]
+			public async Task AddMoney(SocketGuildUser user, [Remainder] int money)
+			{
+				if (Context.User.Id == YOUR ID HERE)
+				{
+					Database.UpdateMoney(user, money);
+					await ReplyAsync($"Gave {money} to {user.Username}!");
+				}
+				else
+				{
+					await ReplyAsync("Only my master can add money to others...");
+					return;
+				}
+			}
+
+			[Group("Gamble")]
+			public class EcoGames : ModuleBase
+			{
+				[Command("bet")]
+				[Remarks("Place your bets and roll the dice!")]
+				public async Task betCmd(int bet)
+				{
+					var moneydiscord = Database.GetUserMoney(Context.User);
+
+					if (moneydiscord.FirstOrDefault().Money < bet)
+					{
+						await ReplyAsync("You do not have enough money to bet this high");
+					}
+					else
+					{
+						Random rand = new Random();
+						Random rand2 = new Random();
+
+						int userRoll = rand2.Next(1, 6);
+						int rolled = rand.Next(1, 9);
+
+						if (userRoll == rolled)
+						{
+							Database.UpdateMoney(Context.User, bet);
+							await ReplyAsync($"Congrats {Context.User.Username}!, you have made ${bet} off rolling a **{userRoll}**!");
+						}
+						else
+						{
+							int betRemove = -bet;
+
+							Database.UpdateMoney(Context.User, betRemove);
+							await ReplyAsync($"Sorry **{Context.User.Username}**, you lost ${bet} off rolling a **{userRoll}**!");
+						}
+					}
+				}
 			}
 		}
     }

@@ -1,4 +1,19 @@
-﻿**___Rica Botpaw - Version 0.7.1a__**
+﻿**___Rica Botpaw - Version 0.9a__**
 -----------------------------------
 **Changelog:**
-- Improved the flipping so much, you can now even specify an image through an URL! Just keep in mind that you HAVE to specify a degree the image should get flipped to.
+After a lot of tinkering around, here it is, a really fucking big update!
+- Money has now a greater use! If you want to put your money together well, then enter `;currency openbank` and you are good to go!
+- Feeling lucky? Try your luck with `;currency gamble bet <Amount you want to bet>` and see what you can do!
+
+-----------------------------------
+**Here is a breakdown of what got changed:**
+- Spiced up the database with another table to handle the economy. LUDICROUS SPEED!
+- Added `;spin` command if you can't decide between 4 randomly picked or specific users.
+- Tinkered a lot around with the money system.
+
+-----------------------------------
+**And more is yet to come!**
+- I am still working on the shop system as well as the ability for others to pay others.
+- Auctioning is a thing?
+- YouTube Audio Streaming! Ayy.
+- The 1.0 Release is also coming closer! *Get off me you creep!*

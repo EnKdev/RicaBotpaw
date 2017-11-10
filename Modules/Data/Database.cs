@@ -1,4 +1,4 @@
-﻿using Discord;
+﻿using YOUR MAIN-TABLE HERE;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -55,9 +55,31 @@ namespace RicaBotpaw.Modules.Data
 		public static List<String> CheckExistingUser(IUser user)
 		{
 			var result = new List<String>();
+
 			var database = new Database("YOUR DATABASE HERE");
 
-			var str = string.Format("SELECT * FROM `YOUR TABLE HERE` WHERE user_id = '{0}'", user.Id);
+			var str = string.Format("SELECT * FROM `YOUR MAIN-TABLE HERE` WHERE user_id = '{0}'", user.Id);
+
+			var tableName = database.FireCommand(str);
+
+			while (tableName.Read())
+			{
+				var userId = (string)tableName["user_id"];
+
+				result.Add(userId);
+			}
+
+			return result;
+		}
+
+		public static List<String> CheckMoneyExistingUser(IUser user)
+		{
+			var result = new List<String>();
+
+			var database = new Database("YOUR DATABASE HERE");
+
+			var str = string.Format("SELECT * FROM `YOUR MONEY-TABLE HERE MAIN-TABLE HERE` WHERE user_id = '{0}'", user.Id);
+
 			var tableName = database.FireCommand(str);
 
 			while (tableName.Read())
@@ -73,19 +95,19 @@ namespace RicaBotpaw.Modules.Data
 		public static string EnterUser(IUser user)
 		{
 			var database = new Database("YOUR DATABASE HERE");
-			var str = string.Format("INSERT INTO `YOUR TABLE HERE` (user_id, username, tokens, customRank, money, level, xp) VALUES ('{0}', '{1}', '100', '', '150', '1', '1')", user.Id, user.Username);
+			var str = string.Format("INSERT INTO `YOUR MAIN-TABLE HERE` (user_id, username, tokens, customRank, money, level, xp) VALUES ('{0}', '{1}', '100', '', '150', '1', '1')", user.Id, user.Username);
 			var table = database.FireCommand(str);
 			database.CloseConnection();
 			return null;
 		}
 
-		public static List<YOUR tableName.cs HERE> GetUserStatus(IUser user)
+		public static List<YOUR MAIN-TABLE HERE> GetUserStatus(IUser user)
 		{
-			var result = new List<YOUR tableName.cs HERE>();
+			var result = new List<YOUR MAIN-TABLE HERE>();
 
 			var database = new Database("YOUR DATABASE HERE");
 
-			var str = string.Format("SELECT * FROM `YOUR TABLE HERE` WHERE user_id = '{0}'", user.Id);
+			var str = string.Format("SELECT * FROM `YOUR MAIN-TABLE HERE` WHERE user_id = '{0}'", user.Id);
 			var tableName = database.FireCommand(str);
 
 			while (tableName.Read())
@@ -94,17 +116,15 @@ namespace RicaBotpaw.Modules.Data
 				var userName = (string)tableName["username"];
 				var currentTokens = (uint)tableName["tokens"];
 				var rank = (string)tableName["customRank"];
-				var money = (int)tableName["money"];
 				var level = (int)tableName["level"];
 				var xp = (int)tableName["xp"];
 
-				result.Add(new // tableName.cs
+				result.Add(new YOUR MAIN-TABLE HERE
 				{
 					UserId = userId,
 					Username = userName,
 					Tokens = currentTokens,
 					Rank = rank,
-					Money = money,
 					Level = level,
 					XP = xp
 				});
@@ -120,7 +140,7 @@ namespace RicaBotpaw.Modules.Data
 
 			try
 			{
-				var strings = string.Format("UPDATE `YOUR TABLE HERE` SET tokens = tokens + '{0}' WHERE user_id = '{1}'", tokens, user.Id);
+				var strings = string.Format("UPDATE `YOUR MAIN-TABLE HERE` SET tokens = tokens + '{0}' WHERE user_id = '{1}'", tokens, user.Id);
 				var reader = database.FireCommand(strings);
 				reader.Close();
 				database.CloseConnection();
@@ -139,7 +159,7 @@ namespace RicaBotpaw.Modules.Data
 
 			try
 			{
-				var strings = $"UPDATE `YOUR TABLE HERE` SET xp = xp + {xp} where user_id = {user.Id.ToString()}";
+				var strings = $"UPDATE `YOUR MAIN-TABLE HERE` SET xp = xp + {xp} where user_id = {user.Id.ToString()}";
 				var reader = database.FireCommand(strings);
 				reader.Close();
 				database.CloseConnection();
@@ -158,7 +178,7 @@ namespace RicaBotpaw.Modules.Data
 
 			try
 			{
-				var strings = $"UPDATE `YOUR TABLE HERE` SET level = level + {1}, xp = xp + {xp} WHERE user_id = {user.Id.ToString()}";
+				var strings = $"UPDATE `YOUR MAIN-TABLE HERE` SET level = level + {1}, xp = xp + {xp} WHERE user_id = {user.Id.ToString()}";
 				var reader = database.FireCommand(strings);
 				reader.Close();
 				database.CloseConnection();
@@ -171,6 +191,8 @@ namespace RicaBotpaw.Modules.Data
 			}
 		}
 
+		// Money
+
 		public static void AddMoney(IUser user)
 		{
 			var database = new Database("YOUR DATABASE HERE");
@@ -178,7 +200,63 @@ namespace RicaBotpaw.Modules.Data
 			try
 			{
 				var moneyToAdd = 50;
-				var strings = $"UPDATE `YOUR TABLE HERE` SET money = money + {moneyToAdd} where user_id = {user.Id.ToString()}";
+				var strings = $"UPDATE `YOUR MONEY-TABLE HERE` SET money = money + {moneyToAdd} WHERE user_id = {user.Id.ToString()}";
+				var reader = database.FireCommand(strings);
+				reader.Close();
+				database.CloseConnection();
+				return;
+			}
+			catch (Exception e)
+			{
+				database.CloseConnection();
+				return;
+			}
+		}
+
+		public static string cBank(IUser user)
+		{
+			var database = new Database("YOUR DATABASE HERE");
+
+			var str = string.Format("INSERT INTO `YOUR MONEY-TABLE` (user_id, money) VALUES ('{0}', '150')", user.Id);
+			var table = database.FireCommand(str);
+
+			database.CloseConnection();
+
+			return null;
+		}
+
+		public static List<YOUR MONEY-TABLE HERE> GetUserMoney(IUser user)
+		{
+			var result = new List<YOUR MONEY-TABLE HERE>();
+
+			var database = new Database("YOUR DATABASE HERE");
+
+			var str = string.Format("SELECT * FROM `YOUR MONEY-TABLE HERE` WHERE user_id = '{0}'", user.Id);
+			var tableName = database.FireCommand(str);
+
+			while (tableName.Read())
+			{
+				var userId = (string)tableName["user_id"];
+				var money = (int)tableName["money"];
+
+				result.Add(new YOUR MONEY-TABLE HERE
+				{
+					UserId = userId,
+					Money = money
+				});
+			}
+			database.CloseConnection();
+
+			return result;
+		}
+
+		public static void UpdateMoney(IUser user, int money)
+		{
+			var database = new Database("YOUR DATABASE HERE");
+
+			try
+			{
+				var strings = string.Format("UPDATE `YOUR MONEY-TABLE HERE` SET money = money + '{1}' WHERE user_id = '{0}'", user.Id, money);
 				var reader = database.FireCommand(strings);
 				reader.Close();
 				database.CloseConnection();
