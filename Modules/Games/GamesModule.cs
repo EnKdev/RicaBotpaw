@@ -232,7 +232,7 @@ namespace RicaBotpaw.Modules.Games
 			ImageSharp.Image<Rgba32> user3 = await core.StartStreamAsync(randomUsers[2]);
 			ImageSharp.Image<Rgba32> user4 = await core.StartStreamAsync(randomUsers[3]);
 
-			ImageSharp.Image<Rgba32> arrow = await core.StartStreamAsync(path: "C:/Users/LordaS/Desktop/Rica Botpaw/RicaBotpaw/images/arrow.png");
+			ImageSharp.Image<Rgba32> arrow = await core.StartStreamAsync(path: "PATH TO THE ARROW IMAGE");
 
 			ImageSharp.Image<Rgba32> finalImg = new ImageSharp.Image<Rgba32>(500, 500);
 
