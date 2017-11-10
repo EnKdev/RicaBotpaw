@@ -2,6 +2,7 @@
 
 namespace RicaBotpaw.Modules.Data
 {
+	public class mainTable // Edit this to the name of your main-table inside your database
 	{
 		public string UserId { get; set; }
 		public string Username { get; set; }
