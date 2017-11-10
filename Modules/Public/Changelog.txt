@@ -1,0 +1,4 @@
+﻿**___Rica Botpaw - Version 0.7.1a__**
+-----------------------------------
+**Changelog:**
+- Improved the flipping so much, you can now even specify an image through an URL! Just keep in mind that you HAVE to specify a degree the image should get flipped to.
