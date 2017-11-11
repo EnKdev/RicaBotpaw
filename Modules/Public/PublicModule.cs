@@ -9,6 +9,10 @@ using System.Diagnostics;
 using System.Text;
 using RicaBotpaw.Modules.Data;
 using RicaBotpaw.ImageCore;
+using System.Net;
+using System.Net.Http;
+using Newtonsoft.Json.Linq;
+using RicaBotpaw.Config;
 
 namespace RicaBotpaw.Modules.Public
 {
@@ -25,7 +29,7 @@ namespace RicaBotpaw.Modules.Public
 		[Remarks("Shows a list of all available commands per module")]
 		public async Task HelpAsync()
 		{
-			var dmChannel = await Context.User.CreateDMChannelAsync();
+			var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
 
 			string prefix = ";";
 			var builder = new EmbedBuilder()
@@ -62,7 +66,7 @@ namespace RicaBotpaw.Modules.Public
 		[Remarks("Shows what a specific command does and what parameters it takes.")]
 		public async Task HelpAsync(string command)
 		{
-			var dmChannel = await Context.User.CreateDMChannelAsync();
+			var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
 			var result = _service.Search(Context, command);
 
 			if (!result.IsSuccess)
@@ -97,7 +101,7 @@ namespace RicaBotpaw.Modules.Public
 		[Remarks("Sets a new game for the bot")]
 		public async Task setGame([Remainder] string game)
 		{
-			if (!(Context.User.Id == YOUR ID HERE))
+			if (!(Context.User.Id == 112559794543468544))
 			{
 				await Context.Channel.SendMessageAsync("You do not have permission to change my game. Contact EnK_#8906 if you think this is wrong");
 			}
@@ -121,8 +125,8 @@ namespace RicaBotpaw.Modules.Public
 				embed.WithColor(new Color(0x4900ff))
 				.AddField(y =>
 				{
-					y.Name = "Author";
-					y.Value = application.Owner.Username; application.Owner.Id.ToString();
+					y.Name = "Bot Author";
+					y.Value = RBConfig.BotAuthor;
 					y.IsInline = false;
 				})
 				.AddField(y =>
@@ -160,12 +164,36 @@ namespace RicaBotpaw.Modules.Public
 				{
 					y.Name = "RBIC Version";
 					y.Value = ImageCoreConfig.Version;
-					y.IsInline = true;
+					y.IsInline = false;
 				})
 				.AddField(y =>
 				{
 					y.Name = "RBIC Build Revision";
 					y.Value = ImageCoreConfig.BuildRevision;
+					y.IsInline = false;
+				})
+				.AddField(y =>
+				{
+					y.Name = "RB Version";
+					y.Value = RBConfig.Version;
+					y.IsInline = true;
+				})
+				.AddField(y =>
+				{
+					y.Name = "RB Build Revision";
+					y.Value = RBConfig.BuildRevision;
+					y.IsInline = true;
+				})
+				.AddField(y =>
+				{
+					y.Name = "RB Modules";
+					y.Value = RBConfig.ModuleCount;
+					y.IsInline = true;
+				})
+				.AddField(y =>
+				{
+					y.Name = "RB Datatables";
+					y.Value = RBConfig.DatabaseTables;
 					y.IsInline = true;
 				})
 				.AddField(y =>
@@ -279,7 +307,7 @@ namespace RicaBotpaw.Modules.Public
 			{
 				foreach (var user in Context.Guild.GetUsersAsync().Result)
 				{
-					if (user.Id == 112559794543468544) // Do not change this! This is good for bug reports, requests, etc.
+					if (user.Id == 112559794543468544)
 					{
 						me = user;
 						myId = user.Mention;
@@ -289,7 +317,7 @@ namespace RicaBotpaw.Modules.Public
 			}
 
 			var application = await Context.Client.GetApplicationInfoAsync();
-			var message = await application.Owner.CreateDMChannelAsync();
+			var message = await application.Owner.GetOrCreateDMChannelAsync();
 			var embed = new EmbedBuilder()
 			{
 				Color = new Color(0, 0, 255)
@@ -307,7 +335,7 @@ namespace RicaBotpaw.Modules.Public
 		[Remarks("Returns Ricas Changelog which includes her version")]
 		public async Task Changelog()
 		{
-			await ReplyAsync(System.IO.File.ReadAllText(@"PATH TO YOUR CHANGELOG"));
+			await ReplyAsync(System.IO.File.ReadAllText(@"PATH TO CHANGELOG.TXT"));
 		}
 		
 
@@ -375,6 +403,31 @@ namespace RicaBotpaw.Modules.Public
 			}
 		}
 
+		[Command("cat")]
+		[Remarks("Sends you a random cat.")]
+		public async Task Cat()
+		{
+			Console.WriteLine("Making API Call...");
+			using (var client = new HttpClient(new HttpClientHandler
+			{
+				AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+			}))
+			{
+				string websiteUrl = "http://random.cat/meow";
+				client.BaseAddress = new Uri(websiteUrl);
+
+				HttpResponseMessage res = client.GetAsync("").Result;
+				res.EnsureSuccessStatusCode();
+
+				string result = await res.Content.ReadAsStringAsync();
+				var json = JObject.Parse(result);
+
+				string CatImage = json["file"].ToString();
+
+				await ReplyAsync(CatImage);
+			}
+		}
+
 		// Economy related.
 		[Group("Currency")]
 		public class Economy : ModuleBase
@@ -429,7 +482,7 @@ namespace RicaBotpaw.Modules.Public
 			[Remarks("Adds money to a user.")]
 			public async Task AddMoney(SocketGuildUser user, [Remainder] int money)
 			{
-				if (Context.User.Id == YOUR ID HERE)
+				if (Context.User.Id == 112559794543468544)
 				{
 					Database.UpdateMoney(user, money);
 					await ReplyAsync($"Gave {money} to {user.Username}!");
@@ -438,6 +491,58 @@ namespace RicaBotpaw.Modules.Public
 				{
 					await ReplyAsync("Only my master can add money to others...");
 					return;
+				}
+			}
+
+			[Command("store")]
+			[Remarks("Part of the payment process.")]
+			public async Task StoreMoney(IUser user, int moneyToStore)
+			{
+				var _user = Database.CheckMoneyExistingUser(user);
+				var embedAuthor = new EmbedAuthorBuilder();
+
+				if (user == null)
+				{
+					user = Context.User;
+				}
+
+				if (_user.Count <= 0)
+				{
+					Database.cBank(user);
+				}
+				else
+				{
+					Database.StoreMoney(user, moneyToStore);
+
+					var embed = new EmbedBuilder()
+					{
+						Color = new Color(0, 0, 255),
+						Author = embedAuthor
+					};
+
+					embed.Title = $"{user} has stored {moneyToStore} Dollars into their vault";
+					embed.Description = "You may now send the amount of money you stored away to the user you want to pay.";
+
+					await ReplyAsync("", false, embed: embed);
+				}
+			}
+
+			[Command("pay")]
+			[Remarks("Pays the user with stored money")]
+			public async Task PayMoney(IUser payUser, IUser recieveUser, int money)
+			{
+				var moneyDiscord = Database.GetUserMoney(Context.User);
+				var _pUser = payUser;
+
+				if (moneyDiscord.FirstOrDefault().StoreMoney < money)
+				{
+					await ReplyAsync("You can't pay more than you have stored away, my friend");
+				}
+				else
+				{
+					Database.PayMoney1(payUser, money);
+					Database.PayMoney2(recieveUser, money);
+					await ReplyAsync($"Successfully paid {recieveUser} {money} Dollars!");
 				}
 			}
 

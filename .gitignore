@@ -1,4 +1,7 @@
 ﻿bin/*
 obj/*
+.csproj
+.sln
 *.csproj
+RicaBotpaw.csproj.user
 *.sln

@@ -9,7 +9,7 @@ namespace RicaBotpaw.Modules.Data
 	public class Database
 	{
 		private string table { get; set; }
-		private const string server = "YOUR IP HERE";
+		private const string server = "YOUR IP HERE.0.0.1";
 		private const string database = "YOUR DATABASE HERE";
 		private const string username = "YOUR USERNAME HERE";
 		private const string password = "YOUR PASSWORD HERE";
@@ -78,7 +78,7 @@ namespace RicaBotpaw.Modules.Data
 
 			var database = new Database("YOUR DATABASE HERE");
 
-			var str = string.Format("SELECT * FROM `YOUR MONEY-TABLE HERE MAIN-TABLE HERE` WHERE user_id = '{0}'", user.Id);
+			var str = string.Format("SELECT * FROM `YOUR MONEY-TABLE HERE` WHERE user_id = '{0}'", user.Id);
 
 			var tableName = database.FireCommand(str);
 
@@ -95,7 +95,7 @@ namespace RicaBotpaw.Modules.Data
 		public static string EnterUser(IUser user)
 		{
 			var database = new Database("YOUR DATABASE HERE");
-			var str = string.Format("INSERT INTO `YOUR MAIN-TABLE HERE` (user_id, username, tokens, customRank, money, level, xp) VALUES ('{0}', '{1}', '100', '', '150', '1', '1')", user.Id, user.Username);
+			var str = string.Format("INSERT INTO `YOUR MAIN-TABLE HERE` (user_id, username, tokens, customRank, level, xp) VALUES ('{0}', '{1}', '100', '', '1', '1')", user.Id, user.Username);
 			var table = database.FireCommand(str);
 			database.CloseConnection();
 			return null;
@@ -217,7 +217,7 @@ namespace RicaBotpaw.Modules.Data
 		{
 			var database = new Database("YOUR DATABASE HERE");
 
-			var str = string.Format("INSERT INTO `YOUR MONEY-TABLE` (user_id, money) VALUES ('{0}', '150')", user.Id);
+			var str = string.Format("INSERT INTO `YOUR MONEY-TABLE HERE` (user_id, money, storeMoney) VALUES ('{0}', '150', '0')", user.Id);
 			var table = database.FireCommand(str);
 
 			database.CloseConnection();
@@ -238,11 +238,13 @@ namespace RicaBotpaw.Modules.Data
 			{
 				var userId = (string)tableName["user_id"];
 				var money = (int)tableName["money"];
+				var storeMoney = (int)tableName["storeMoney"];
 
 				result.Add(new YOUR MONEY-TABLE HERE
 				{
 					UserId = userId,
-					Money = money
+					Money = money,
+					StoreMoney = storeMoney
 				});
 			}
 			database.CloseConnection();
@@ -257,6 +259,63 @@ namespace RicaBotpaw.Modules.Data
 			try
 			{
 				var strings = string.Format("UPDATE `YOUR MONEY-TABLE HERE` SET money = money + '{1}' WHERE user_id = '{0}'", user.Id, money);
+				var reader = database.FireCommand(strings);
+				reader.Close();
+				database.CloseConnection();
+				return;
+			}
+			catch (Exception e)
+			{
+				database.CloseConnection();
+				return;
+			}
+		}
+
+		public static void StoreMoney(IUser user, int money)
+		{
+			var database = new Database("YOUR DATABASE HERE");
+
+			try
+			{
+				var strings = $"UPDATE `YOUR MONEY-TABLE HERE` SET storeMoney = storeMoney + {money}, money = money - {money} WHERE user_id = {user.Id.ToString()}";
+				var reader = database.FireCommand(strings);
+				reader.Close();
+				database.CloseConnection();
+				return;
+			}
+			catch (Exception e)
+			{
+				database.CloseConnection();
+				return;
+			}
+		}
+
+		public static void PayMoney1(IUser user1, int money)
+		{
+			var database = new Database("YOUR DATABASE HERE");
+
+			try
+			{
+				var strings = $"UPDATE `YOUR MONEY-TABLE HERE` SET storeMoney = storeMoney - {money} WHERE user_id = {user1.Id.ToString()}";
+				var reader = database.FireCommand(strings);
+				reader.Close();
+				database.CloseConnection();
+				return;
+			}
+			catch (Exception e)
+			{
+				database.CloseConnection();
+				return;
+			}
+		}
+		
+		public static void PayMoney2(IUser user2, int money)
+		{
+			var database = new Database("YOUR DATABASE HERE");
+
+			try
+			{
+				var strings = $"UPDATE `YOUR MONEY-TABLE HERE` SET money = money + {money} WHERE user_id = {user2.Id.ToString()}";
 				var reader = database.FireCommand(strings);
 				reader.Close();
 				database.CloseConnection();

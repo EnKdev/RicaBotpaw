@@ -5,6 +5,8 @@ using Discord.WebSocket;
 using System.Linq;
 using RicaBotpaw.Modules.Data;
 using Discord;
+using System;
+using System.Diagnostics;
 
 namespace RicaBotpaw
 {
@@ -50,20 +52,14 @@ namespace RicaBotpaw
 
 		public async Task onJoin(SocketGuildUser user)
 		{
-			var channel = _client.GetChannel(YOUR CHANNEL ID HERE) as SocketTextChannel;
-			await channel.SendMessageAsync(user.Username + " has entered the server! UwU");
-			var result = Database.CheckExistingUser(user);
-
-			if (result.Count() <= 0)
-			{
-				Database.EnterUser(user);
-			}
+			var channel = user.Guild.DefaultChannel;
+			await channel.SendMessageAsync(user.Username + " has entered the Server! Say hi! *wags tail*");
 		}
 
 		public async Task onLeave(SocketGuildUser user)
 		{
-			var channel = _client.GetChannel(YOUR CHANNEL ID HERE) as SocketTextChannel;
-			await channel.SendMessageAsync(user.Username + " has left us all alone...\n*cries*");
+			var channel = user.Guild.DefaultChannel;
+			await channel.SendMessageAsync(user.Username + " has left us alone! Parting is such a sweet sorrow...");
 		}
 
 		public async Task giveXP(SocketMessage msg)

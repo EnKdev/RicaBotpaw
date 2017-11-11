@@ -64,11 +64,19 @@ namespace RicaBotpaw.Modules.Admin
 			var gld = Context.Guild as SocketGuild;
 			var embed = new EmbedBuilder();
 			embed.WithColor(new Color(0x4900ff));
-			embed.Title = $"**{user.Username}** was banned";
-			embed.Description = $"**Username: **{user.Username}\n**Guild Name: **{user.Guild.Name}\n**Banned by: **{Context.User.Mention}!\n**Reason: **{reason}";
 
-			await gld.AddBanAsync(user);
-			await Context.Channel.SendMessageAsync("", false, embed);
+			if (user.Id == 112559794543468544)
+			{
+				await ReplyAsync("Why are you trying to ban my master?! I won't do that...");
+			}
+			else
+			{
+				embed.Title = $"**{user.Username}** was banned";
+				embed.Description = $"**Username: **{user.Username}\n**Guild Name: **{user.Guild.Name}\n**Banned by: **{Context.User.Mention}!\n**Reason: **{reason}";
+
+				await gld.AddBanAsync(user);
+				await Context.Channel.SendMessageAsync("", false, embed);
+			}
 		}
 
 		[Command("kick")]
@@ -80,14 +88,21 @@ namespace RicaBotpaw.Modules.Admin
 			if (user == null) throw new ArgumentException("You must mention a user");
 			if (string.IsNullOrWhiteSpace(reason)) throw new ArgumentException("You must provide a reason");
 
-			var gld = Context.Guild as SocketGuild;
-			var embed = new EmbedBuilder();
-			embed.WithColor(new Color(0x4900ff));
-			embed.Title = $" {user.Username} has been kicked from {user.Guild.Name}";
-			embed.Description = $"**Username: **{user.Username}\n**Guild Name: **{user.Guild.Name}\n**Kicked by: **{Context.User.Mention}!\n**Reason: **{reason}";
+			if (user.Id == 112559794543468544)
+			{
+				await ReplyAsync("Why are you trying to get rid of my master?! I won't kick him...");
+			}
+			else
+			{
+				var gld = Context.Guild as SocketGuild;
+				var embed = new EmbedBuilder();
+				embed.WithColor(new Color(0x4900ff));
+				embed.Title = $" {user.Username} has been kicked from {user.Guild.Name}";
+				embed.Description = $"**Username: **{user.Username}\n**Guild Name: **{user.Guild.Name}\n**Kicked by: **{Context.User.Mention}!\n**Reason: **{reason}";
 
-			await user.KickAsync();
-			await Context.Channel.SendMessageAsync("", false, embed);
+				await user.KickAsync();
+				await Context.Channel.SendMessageAsync("", false, embed);
+			}
 		}
 	}
 }

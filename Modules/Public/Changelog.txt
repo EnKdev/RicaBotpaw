@@ -1,19 +1,28 @@
-﻿**___Rica Botpaw - Version 0.9a__**
+﻿**___Rica Botpaw - Version 1.0.0-rc___**
 -----------------------------------
-**Changelog:**
-After a lot of tinkering around, here it is, a really fucking big update!
-- Money has now a greater use! If you want to put your money together well, then enter `;currency openbank` and you are good to go!
-- Feeling lucky? Try your luck with `;currency gamble bet <Amount you want to bet>` and see what you can do!
+Version 1.0 is close to be done, so here is the release candidate.
+Here are the heaviest changes so far!
+-----------------------------------
+===MONEY===
+-You can finally pay other people now! To do that, you can find info more below.
 
 -----------------------------------
-**Here is a breakdown of what got changed:**
-- Spiced up the database with another table to handle the economy. LUDICROUS SPEED!
-- Added `;spin` command if you can't decide between 4 randomly picked or specific users.
-- Tinkered a lot around with the money system.
+===AUDIO===
+-You can finally start streaming music via YouTube! (Really laggy tho. Better not use this until... idk)
 
 -----------------------------------
-**And more is yet to come!**
-- I am still working on the shop system as well as the ability for others to pay others.
-- Auctioning is a thing?
-- YouTube Audio Streaming! Ayy.
-- The 1.0 Release is also coming closer! *Get off me you creep!*
+===IMAGES===
+-Added a filter command so you can put your avatar through various filters. Isn't that nice?
+
+-----------------------------------
+======NEW COMMANDS======
+`;currency store <User> <Amount>` -> Stores any amount you specified into your personal bank vault
+`;currency pay <User> <UserToPay> <Amount>` -> If you have stored something into your vault, you can then pay others with it!
+`;filter <Filter>` -> Puts your image through the filter you selected.
+`;ytStream <Link>` -> Self Explainatory, is it?
+
+-----------------------------------
+It was really quite a hazzle to rewrite me to the state of it being whoopdiedoop!
+Of course, some bugs here and there are still existant, but things never can be perfect, can they?
+
+We see us with the next changelog guys, Happy commanding!

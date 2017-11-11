@@ -20,7 +20,7 @@ namespace RicaBotpaw
             _client = new DiscordSocketClient();
             _commands = new CommandHandler();
 
-			string token = "YOUR BOT TOKEN HERE";
+			string token = "";
 
 
 			await _client.LoginAsync(TokenType.Bot, token);

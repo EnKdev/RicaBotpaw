@@ -10,5 +10,6 @@ namespace RicaBotpaw.Modules.Data
 	{
 		public string UserId { get; set; }
 		public int Money { get; set; }
+		public int storeMoney { get; set; }
 	}
 }
