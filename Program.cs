@@ -2,28 +2,41 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using Discord.Commands;
 
 namespace RicaBotpaw
 {
-    public class Program
+	/// <summary>
+	/// The main file
+	/// </summary>
+	public class Program
     {
-        // Convert our sync main to an async main.
-        public static void Main(string[] args) =>
+		// Convert our sync main to an async main.
+		/// <summary>
+		/// The async main method required for the bot
+		/// </summary>
+		/// <param name="args">The arguments.</param>
+		public static void Main(string[] args) =>
             new Program().Start().GetAwaiter().GetResult();
 
-        private DiscordSocketClient _client;
-        private CommandHandler _commands;
+		/// <summary>
+		/// The client
+		/// </summary>
+		private DiscordSocketClient _client;
+		/// <summary>
+		/// The commands
+		/// </summary>
+		private CommandHandler _commands;
 
-        public async Task Start()
+		/// <summary>
+		/// This starts our bot
+		/// </summary>
+		/// <returns></returns>
+		public async Task Start()
         {
-            _client = new DiscordSocketClient();
+			_client = new DiscordSocketClient();
             _commands = new CommandHandler();
 
-			string token = "";
-
-
-			await _client.LoginAsync(TokenType.Bot, token);
+			await _client.LoginAsync(TokenType.Bot, "");
             await _client.StartAsync();
 
             _client.Log += Log;
@@ -33,7 +46,12 @@ namespace RicaBotpaw
             await Task.Delay(-1);
         }
 
-        private Task Log(LogMessage msg)
+		/// <summary>
+		/// Logs the specified MSG.
+		/// </summary>
+		/// <param name="msg">The MSG.</param>
+		/// <returns></returns>
+		private Task Log(LogMessage msg)
         {
 			var logger = Console.ForegroundColor;
 

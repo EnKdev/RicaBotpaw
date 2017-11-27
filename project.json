@@ -1,0 +1,7 @@
+{
+  "buildOptions": {
+    "emitEntryPoint": true,
+    "copyToOutput": "appsettings.json"
+  },
+  "runtimes": { "win10-x64": {} }
+}

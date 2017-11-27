@@ -6,8 +6,17 @@ using Discord.Audio;
 
 namespace RicaBotpaw.Modules.Audio
 {
-	public class AudioModule : ModuleBase
+	/// <summary>
+	/// This is the audio class
+	/// </summary>
+	/// <seealso cref="Discord.Commands.ModuleBase" />
+	public class Audio : ModuleBase
 	{
+		/// <summary>
+		/// Creates the yt stream.
+		/// </summary>
+		/// <param name="url">The URL.</param>
+		/// <returns></returns>
 		private Process CreateYTStream(string url)
 		{
 			Process currentSong = new Process();
@@ -25,13 +34,25 @@ namespace RicaBotpaw.Modules.Audio
 			return currentSong;
 		}
 
+		/// <summary>
+		/// The service
+		/// </summary>
 		private CommandService _service;
 
-		public AudioModule(CommandService service)
+		/// <summary>
+		/// This registers the AudioModule into the commandhandler
+		/// </summary>
+		/// <param name="service">The service.</param>
+		public Audio(CommandService service)
 		{
 			_service = service;
 		}
 
+		/// <summary>
+		/// Youtube Audio Streaming!
+		/// </summary>
+		/// <param name="url">The URL.</param>
+		/// <returns></returns>
 		[Command("ytStream", RunMode = RunMode.Async)]
 		[Remarks("Streams a song directly from youtube! (Very laggy tho. Better not use it until the bot is not selfhosted anymore")]
 		public async Task play(string url)

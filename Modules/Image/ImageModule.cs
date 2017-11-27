@@ -13,15 +13,32 @@ using ImageSharp.Processing;
 
 namespace RicaBotpaw.Modules.Image
 {
-    public class ImageModule : ModuleBase
+	/// <summary>
+	/// This is the image module class
+	/// </summary>
+	/// <seealso cref="Discord.Commands.ModuleBase" />
+	public class Imaging : ModuleBase
     {
+		/// <summary>
+		/// The service
+		/// </summary>
 		private CommandService _service;
 
-		public ImageModule(CommandService service)
+		/// <summary>
+		/// This initializes the ImageModule into the commandhandler
+		/// </summary>
+		/// <param name="service">The service.</param>
+		public Imaging(CommandService service)
 		{
 			_service = service;
 		}
 
+		/// <summary>
+		/// Flippedy flip!
+		/// </summary>
+		/// <param name="degrees">The degrees.</param>
+		/// <param name="url">The URL.</param>
+		/// <returns></returns>
 		[Command("flip")]
 		[Remarks("Flips your Discord Avatar or another image specified through an URL")]
 		public async Task FlipImage(int degrees = 888, string url = null)
@@ -29,6 +46,12 @@ namespace RicaBotpaw.Modules.Image
 			await flipImage(degrees, url);
 		}
 
+		/// <summary>
+		/// The task used inside FlipImage
+		/// </summary>
+		/// <param name="degrees">The degrees.</param>
+		/// <param name="url">The URL.</param>
+		/// <returns></returns>
 		public async Task flipImage(int degrees, string url)
 		{
 			if (degrees <= 0)
@@ -59,6 +82,12 @@ namespace RicaBotpaw.Modules.Image
 			}
 		}
 
+		/// <summary>
+		/// Instagram Emulator 2017
+		/// </summary>
+		/// <param name="filter">The filter.</param>
+		/// <param name="user">The user.</param>
+		/// <returns></returns>
 		[Command("filter")]
 		[Remarks("We all know Instagram to be honest")]
 		public async Task filterImage(string filter = null, [Remainder] SocketUser user = null)

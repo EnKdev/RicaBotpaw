@@ -13,18 +13,35 @@ using System.Net;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using RicaBotpaw.Config;
+using Newtonsoft.Json;
+using System.IO;
 
 namespace RicaBotpaw.Modules.Public
 {
-	public class PublicModule : ModuleBase
+	/// <summary>
+	/// The public module
+	/// </summary>
+	/// <seealso cref="Discord.Commands.ModuleBase" />
+	public class Public : ModuleBase
 	{
+		/// <summary>
+		/// The service
+		/// </summary>
 		private CommandService _service;
 
-		public PublicModule(CommandService service)
+		/// <summary>
+		/// Initializes the publicmodule into the commandhandler
+		/// </summary>
+		/// <param name="service">The service.</param>
+		public Public(CommandService service)
 		{
 			_service = service;
 		}
 
+		/// <summary>
+		/// Sometimes you need help...
+		/// </summary>
+		/// <returns></returns>
 		[Command("help")]
 		[Remarks("Shows a list of all available commands per module")]
 		public async Task HelpAsync()
@@ -62,6 +79,11 @@ namespace RicaBotpaw.Modules.Public
 			await dmChannel.SendMessageAsync("", false, builder.Build());
 		}
 
+		/// <summary>
+		/// Command help!
+		/// </summary>
+		/// <param name="command">The command.</param>
+		/// <returns></returns>
 		[Command("help")]
 		[Remarks("Shows what a specific command does and what parameters it takes.")]
 		public async Task HelpAsync(string command)
@@ -97,6 +119,11 @@ namespace RicaBotpaw.Modules.Public
 			await dmChannel.SendMessageAsync("", false, builder.Build());
 		}
 
+		/// <summary>
+		/// Sets the bots game. Only for the owner
+		/// </summary>
+		/// <param name="game">The game.</param>
+		/// <returns></returns>
 		[Command("setgame")]
 		[Remarks("Sets a new game for the bot")]
 		public async Task setGame([Remainder] string game)
@@ -113,6 +140,10 @@ namespace RicaBotpaw.Modules.Public
 			}
 		}
 
+		/// <summary>
+		/// Returns the bot info
+		/// </summary>
+		/// <returns></returns>
 		[Command("botinfo")]
 		[Remarks("Shows all of the bot info")]
 		public async Task Info()
@@ -175,7 +206,7 @@ namespace RicaBotpaw.Modules.Public
 				.AddField(y =>
 				{
 					y.Name = "RB Version";
-					y.Value = RBConfig.Version;
+					y.Value = RBConfig.BotVersion;
 					y.IsInline = true;
 				})
 				.AddField(y =>
@@ -193,7 +224,7 @@ namespace RicaBotpaw.Modules.Public
 				.AddField(y =>
 				{
 					y.Name = "RB Datatables";
-					y.Value = RBConfig.DatabaseTables;
+					y.Value = RBConfig.BotTables;
 					y.IsInline = true;
 				})
 				.AddField(y =>
@@ -225,9 +256,23 @@ namespace RicaBotpaw.Modules.Public
 			}
 		}
 
+		/// <summary>
+		/// Returns the uptime in botinfo
+		/// </summary>
+		/// <returns></returns>
 		private static string GetUptime() => (DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"dd\.hh\:mm\:ss");
+
+		/// <summary>
+		/// Calculates the bots heapsize
+		/// </summary>
+		/// <returns></returns>
 		private static string GetHeapSize() => Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2).ToString();
 
+		/// <summary>
+		/// Returns info about a discord user
+		/// </summary>
+		/// <param name="user">The user.</param>
+		/// <returns></returns>
 		[Command("userinfo")]
 		[Alias("uinfo")]
 		[Name("userinfo `<user>`")]
@@ -266,6 +311,10 @@ namespace RicaBotpaw.Modules.Public
 			await ReplyAsync("", false, embed.Build());
 		}
 
+		/// <summary>
+		/// Returns info about a discord server
+		/// </summary>
+		/// <returns></returns>
 		[Command("serverinfo")]
 		[Alias("sinfo", "serv")]
 		[Remarks("Info about a server this bot is in")]
@@ -296,8 +345,16 @@ namespace RicaBotpaw.Modules.Public
 			await ReplyAsync("", false, embedBuilder);
 		}
 
+		/// <summary>
+		/// Me
+		/// </summary>
 		private static IUser me;
 
+		/// <summary>
+		/// Allows the user to send me a dm
+		/// </summary>
+		/// <param name="dm">The dm.</param>
+		/// <returns></returns>
 		[Command("ownerDM")]
 		[Remarks("Sends a DM to the owner. Useful for bug reports")]
 		public async Task dm([Remainder] string dm)
@@ -331,16 +388,25 @@ namespace RicaBotpaw.Modules.Public
 			await Context.Channel.SendMessageAsync("", false, embed);
 		}
 
+		/// <summary>
+		/// Prints the bots changelog inside the chat
+		/// </summary>
+		/// <returns></returns>
 		[Command("changelog")]
 		[Remarks("Returns Ricas Changelog which includes her version")]
 		public async Task Changelog()
 		{
-			await ReplyAsync(System.IO.File.ReadAllText(@"PATH TO CHANGELOG.TXT"));
+			await ReplyAsync(System.IO.File.ReadAllText(@"C:\Users\LordaS\Desktop\Rica Botpaw\RicaBotpaw\Modules\Public\changelog.txt"));
 		}
-		
+
 
 		// Database stuff
 
+		/// <summary>
+		/// Returns data stored into the database
+		/// </summary>
+		/// <param name="user">The user.</param>
+		/// <returns></returns>
 		[Command("status")]
 		[Alias("s")]
 		[Remarks("Retrieves data about a user from the Database")]
@@ -367,13 +433,19 @@ namespace RicaBotpaw.Modules.Public
 			embed.Description = (Context.User.Mention + "\n\n" + user.Username + "'s current status is as followed: \n"
 				+ ":small_blue_diamond:" + "UserID: " + tableName.FirstOrDefault().UserId + "\n"
 				+ ":small_blue_diamond:" + tableName.FirstOrDefault().Tokens + " tokens!\n"
-				+ ":small_blue_diamond: Current custom rank: " + tableName.FirstOrDefault().Rank + "\n"
-				+ ":small_blue_diamond: Level: " + tableName.FirstOrDefault().Level + "\n"
-				+ ":small_blue_diamond: XP: " + tableName.FirstOrDefault().XP + "\n");
+				+ ":small_blue_diamond:" + "Current custom rank: " + tableName.FirstOrDefault().Rank + "\n"
+				+ ":small_blue_diamond:" + "Level: " + tableName.FirstOrDefault().Level + "\n"
+				+ ":small_blue_diamond:" + "XP: " + tableName.FirstOrDefault().XP + "\n"
+				+ ":small_blue_diamond:" + "GUID: " + tableName.FirstOrDefault().GUID + "\n");
 
 			await Context.Channel.SendMessageAsync("", false, embed);
 		}
 
+		/// <summary>
+		/// Registers you inside the Database
+		/// </summary>
+		/// <param name="user">The user.</param>
+		/// <returns></returns>
 		[Command("enterDb")]
 		[Remarks("Enters you into Ricas Database")]
 		public async Task dbEnter([Remainder] IUser user = null)
@@ -388,6 +460,13 @@ namespace RicaBotpaw.Modules.Public
 		}
 
 		// Database Awards, UwU
+
+		/// <summary>
+		/// When i want to award someone with some prestige
+		/// </summary>
+		/// <param name="user">The user.</param>
+		/// <param name="tokens">The tokens.</param>
+		/// <returns></returns>
 		[Command("award")]
 		[Remarks("Award someone with some tokens, Woo!")]
 		public async Task Award(SocketGuildUser user, [Remainder] uint tokens)
@@ -403,6 +482,10 @@ namespace RicaBotpaw.Modules.Public
 			}
 		}
 
+		/// <summary>
+		/// Random cat!
+		/// </summary>
+		/// <returns></returns>
 		[Command("cat")]
 		[Remarks("Sends you a random cat.")]
 		public async Task Cat()
@@ -428,10 +511,26 @@ namespace RicaBotpaw.Modules.Public
 			}
 		}
 
+		[Command("donate")]
+		[Remarks("If you want to show your support, then do it with this!")]
+		public async Task Donate()
+		{
+			await ReplyAsync("If you want to show your support to EnK_ for making me, you can do it over paypal!\nAny amount is accepted (Except an amount of 0) and will greatly help him in keeping this project running!\nYou can donate to him here: https://www.paypal.me/zi8tx");
+		}
+
 		// Economy related.
+
+		/// <summary>
+		/// This subclass is handled as a submodule of the public module and handles all economical related things
+		/// </summary>
+		/// <seealso cref="Discord.Commands.ModuleBase" />
 		[Group("Currency")]
 		public class Economy : ModuleBase
 		{
+			/// <summary>
+			/// First you gotta open a bank account before you get any money.
+			/// </summary>
+			/// <returns></returns>
 			[Command("openbank")]
 			[Remarks("Opens your bank account! Woah!")]
 			public async Task bankC()
@@ -457,6 +556,10 @@ namespace RicaBotpaw.Modules.Public
 				}
 			}
 
+			/// <summary>
+			/// Returns your balance
+			/// </summary>
+			/// <returns></returns>
 			[Command("balance")]
 			[Remarks("Returns your current balance")]
 			public async Task MoneyOl()
@@ -478,6 +581,12 @@ namespace RicaBotpaw.Modules.Public
 				await ReplyAsync("", false, embed.Build());
 			}
 
+			/// <summary>
+			/// When i want to add money to someones account
+			/// </summary>
+			/// <param name="user">The user.</param>
+			/// <param name="money">The money.</param>
+			/// <returns></returns>
 			[Command("givemoney")]
 			[Remarks("Adds money to a user.")]
 			public async Task AddMoney(SocketGuildUser user, [Remainder] int money)
@@ -494,6 +603,12 @@ namespace RicaBotpaw.Modules.Public
 				}
 			}
 
+			/// <summary>
+			/// Part 1 of the payment process
+			/// </summary>
+			/// <param name="user">The user.</param>
+			/// <param name="moneyToStore">The money to store.</param>
+			/// <returns></returns>
 			[Command("store")]
 			[Remarks("Part of the payment process.")]
 			public async Task StoreMoney(IUser user, int moneyToStore)
@@ -527,6 +642,13 @@ namespace RicaBotpaw.Modules.Public
 				}
 			}
 
+			/// <summary>
+			/// Part 2 of the payment process
+			/// </summary>
+			/// <param name="payUser">The pay user.</param>
+			/// <param name="recieveUser">The recieve user.</param>
+			/// <param name="money">The money.</param>
+			/// <returns></returns>
 			[Command("pay")]
 			[Remarks("Pays the user with stored money")]
 			public async Task PayMoney(IUser payUser, IUser recieveUser, int money)
@@ -546,9 +668,57 @@ namespace RicaBotpaw.Modules.Public
 				}
 			}
 
+			/// <summary>
+			/// Dailies this instance.
+			/// </summary>
+			/// <returns></returns>
+			[Command("daily")]
+			[Remarks("Daily tokens and money! Yey!")]
+			public async Task Daily()
+			{
+				var user = Context.User;
+
+				var result = Database.CheckExistingUser(user);
+				if (result.Count <= 0)
+					Database.EnterUser(user);
+
+				var tableName = Database.GetUserStatus(user);
+				DateTime now = DateTime.Now;
+				DateTime daily = tableName.FirstOrDefault().Daily;
+				int diff = DateTime.Compare(daily, now);
+
+				if ((tableName.FirstOrDefault().Daily.ToString() == "2001-01-01 00:00:00") || (daily.DayOfYear < now.DayOfYear && diff < 0 || diff >= 0))
+				{
+					Database.ChangeDaily(user);
+					int MoneyAmount = 150;
+					uint TokenAmount = 200;
+					Database.AddMoney2(user, MoneyAmount);
+					Database.ChangeTokens(user, TokenAmount);
+
+					await ReplyAsync($"You recieved your daily {MoneyAmount} Dollars and {TokenAmount} Prestige Tokens!");
+				}
+				else
+				{
+					TimeSpan diff2 = now - daily;
+					// This line prevents "Your dollars and tokens refresh in 00:18:57.0072170!"
+					TimeSpan di = new TimeSpan(23 - diff2.Hours, 60 - diff2.Minutes, 60 - diff2.Seconds);
+
+					await ReplyAsync($"Your dollars and tokens refresh in {di}");
+				}
+			}
+
+			/// <summary>
+			/// This class is for the games based on economical features
+			/// </summary>
+			/// <seealso cref="Discord.Commands.ModuleBase" />
 			[Group("Gamble")]
 			public class EcoGames : ModuleBase
 			{
+				/// <summary>
+				/// Either you win or you lose.
+				/// </summary>
+				/// <param name="bet">The bet.</param>
+				/// <returns></returns>
 				[Command("bet")]
 				[Remarks("Place your bets and roll the dice!")]
 				public async Task betCmd(int bet)

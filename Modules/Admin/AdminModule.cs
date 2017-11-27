@@ -9,14 +9,31 @@ using System.Diagnostics;
 
 namespace RicaBotpaw.Modules.Admin
 {
-	public class AdminModule : ModuleBase
+	/// <summary>
+	/// This is the class for all of the bots admintools
+	/// </summary>
+	/// <seealso cref="Discord.Commands.ModuleBase" />
+	public class Admintools : ModuleBase
 	{
+		/// <summary>
+		/// The service
+		/// </summary>
 		private CommandService _service;
-		public AdminModule(CommandService service)
+
+		/// <summary>
+		/// This registers the AdminModule into the commandhandler
+		/// </summary>
+		/// <param name="service">The service.</param>
+		public Admintools(CommandService service)
 		{
 			_service = service;
 		}
 
+		/// <summary>
+		/// Purges the chat by x messages
+		/// </summary>
+		/// <param name="del">The delete.</param>
+		/// <returns></returns>
 		[Command("purge")]
 		[Remarks("Clears the chat by a specified amount of messages.")]
 		public async Task purge([Remainder] int del = 0)
@@ -52,6 +69,17 @@ namespace RicaBotpaw.Modules.Admin
 			await Context.Channel.SendMessageAsync($"`{Context.User.Username} purged {a} messages`");
 		}
 
+		/// <summary>
+		/// Bans a bad user
+		/// </summary>
+		/// <param name="user">The user.</param>
+		/// <param name="reason">The reason.</param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentException">
+		/// You must mention a user
+		/// or
+		/// You must provide a reason
+		/// </exception>
 		[Command("ban")]
 		[Remarks("Bans @user")]
 		[RequireUserPermission(GuildPermission.BanMembers)]
@@ -79,6 +107,17 @@ namespace RicaBotpaw.Modules.Admin
 			}
 		}
 
+		/// <summary>
+		/// Kicks a bad user
+		/// </summary>
+		/// <param name="user">The user.</param>
+		/// <param name="reason">The reason.</param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentException">
+		/// You must mention a user
+		/// or
+		/// You must provide a reason
+		/// </exception>
 		[Command("kick")]
 		[Remarks("Kicks @user")]
 		[RequireUserPermission(GuildPermission.KickMembers)]
