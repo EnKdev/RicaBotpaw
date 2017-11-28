@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using RicaBotpaw.Config;
 using Newtonsoft.Json;
 using System.IO;
+using Urban.NET;
 
 namespace RicaBotpaw.Modules.Public
 {
@@ -511,12 +512,45 @@ namespace RicaBotpaw.Modules.Public
 			}
 		}
 
+		/// <summary>
+		/// Urbans the dictionary.
+		/// </summary>
+		/// <param name="term">The term.</param>
+		/// <returns></returns>
+		[Command("ud")]
+		[Remarks("Returns an Urban Dictionary defintion")]
+		public async Task Urban(string term)
+		{
+			UrbanService client = new UrbanService();
+			var data = await client.Data($"{term}");
+			var tUp = data.List[0].ThumbsUp;
+			var tDown = data.List[0].ThumbsDown;
+			var def = data.List[0].Definition;
+			var ex = data.List[0].Example;
+
+			var embed = new EmbedBuilder()
+			{
+				Color = new Color(60, 133, 150)
+			};
+
+			embed.Title = $"Urban Definiton for {term}";
+			embed.Description = ($"{def}\n------------\nExample:\n{ex}\n-----------\nThis Urban Defintion has received {tUp} :thumbsup: and {tDown} :thumbsdown:");
+
+			await ReplyAsync("", false, embed: embed);
+		}
+
+
+		/// <summary>
+		/// If someone actually is going to donate.
+		/// </summary>
+		/// <returns></returns>
 		[Command("donate")]
 		[Remarks("If you want to show your support, then do it with this!")]
 		public async Task Donate()
 		{
 			await ReplyAsync("If you want to show your support to EnK_ for making me, you can do it over paypal!\nAny amount is accepted (Except an amount of 0) and will greatly help him in keeping this project running!\nYou can donate to him here: https://www.paypal.me/zi8tx");
 		}
+
 
 		// Economy related.
 

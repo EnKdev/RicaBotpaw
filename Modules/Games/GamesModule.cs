@@ -173,6 +173,43 @@ namespace RicaBotpaw.Modules.Games
 			}
 		}
 
+		// Coin-Flip
+		string[] coinSides = new string[]
+		{
+			"Tails",
+			"Heads"
+		};
+
+		/// <summary>
+		/// Flips a coin.
+		/// </summary>
+		/// <param name="choice">The choice.</param>
+		/// <returns></returns>
+		[Command("coinflip")]
+		[Remarks("Flips a coin")]
+		public async Task CoinFlip(string choice)
+		{
+			int randIdx = rand.Next(coinSides.Length);
+			string side = coinSides[randIdx];
+
+			if (choice.Equals("Heads") && side.Equals("Tails"))
+			{
+				await ReplyAsync("You lost!\nYou chose Heads, and the coin landed on Tails");
+			}
+			else if (choice.Equals("Tails") && side.Equals("Heads"))
+			{
+				await ReplyAsync("You lost!\nYou chose Tails, and the coin landed on Heads");
+			}
+			else if (choice.Equals("Heads") && side.Equals("Heads"))
+			{
+				await ReplyAsync("You won!\nYou chose Heads, and the coin landed on Heads");
+			}
+			else if (choice.Equals("Tails") && side.Equals("Tails"))
+			{
+				await ReplyAsync("You won!\nYou chose Tails, and the coin landed on Tails");
+			}
+		}
+
 		// Turn-based fight
 
 		static string player1;
