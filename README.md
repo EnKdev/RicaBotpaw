@@ -3,7 +3,7 @@
 A general purpose discord bot written by:
 - EnK_/zi8tx/TheRealDreamzy
 
-Current version: 1.6.0
+Current version: 1.7.1
 
 ----------
 # Code of conduct:

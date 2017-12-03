@@ -33,9 +33,9 @@ namespace RicaBotpaw.Modules.Sona
 		/// <param name="user">The user.</param>
 		/// <param name="name">The name.</param>
 		/// <param name="age">The age.</param>
-		/// <param name="spec">The species.</param>
-		/// <param name="gend">The gender.</param>
-		/// <param name="sex">The sexuality.</param>
+		/// <param name="spec">The spec.</param>
+		/// <param name="gend">The gend.</param>
+		/// <param name="sex">The sex.</param>
 		/// <returns></returns>
 		[Command("register")]
 		[Remarks("Registers your sona into the sona database")]
@@ -43,7 +43,12 @@ namespace RicaBotpaw.Modules.Sona
 		{
 			if (user == null)
 			{
+				user = Context.User;
 				Database.EnterUser(user);
+			}
+			else if (user != Context.User)
+			{
+				await ReplyAsync("You only can register your own sona.");
 			}
 			else
 			{

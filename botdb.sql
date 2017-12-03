@@ -12,11 +12,11 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 
 
--- Exportiere Datenbank Struktur für botdb
-CREATE DATABASE IF NOT EXISTS `botdb` /*!40100 DEFAULT CHARACTER SET utf8 */;
-USE `botdb`;
+-- Exportiere Datenbank Struktur für vampdb
+CREATE DATABASE IF NOT EXISTS `vampdb` /*!40100 DEFAULT CHARACTER SET utf8 */;
+USE `vampdb`;
 
--- Exportiere Struktur von Tabelle botdb.discord
+-- Exportiere Struktur von Tabelle vampdb.discord
 CREATE TABLE IF NOT EXISTS `discord` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` varchar(50) DEFAULT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `discord` (
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
 
 -- Daten Export vom Benutzer nicht ausgewählt
--- Exportiere Struktur von Tabelle botdb.moneydiscord
+-- Exportiere Struktur von Tabelle vampdb.moneydiscord
 CREATE TABLE IF NOT EXISTS `moneydiscord` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` varchar(50) DEFAULT NULL,
@@ -41,7 +41,27 @@ CREATE TABLE IF NOT EXISTS `moneydiscord` (
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
 
 -- Daten Export vom Benutzer nicht ausgewählt
--- Exportiere Struktur von Tabelle botdb.sonatable
+-- Exportiere Struktur von Tabelle vampdb.poll
+CREATE TABLE IF NOT EXISTS `poll` (
+  `poll_id` int(11) NOT NULL AUTO_INCREMENT,
+  `question` varchar(50) NOT NULL,
+  `voteyes` int(11) DEFAULT '0',
+  `voteno` int(11) DEFAULT '0',
+  `user_id` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`poll_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+
+-- Daten Export vom Benutzer nicht ausgewählt
+-- Exportiere Struktur von Tabelle vampdb.pollvotes
+CREATE TABLE IF NOT EXISTS `pollvotes` (
+  `voteid` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` varchar(50) DEFAULT NULL,
+  `vote` int(11) NOT NULL COMMENT '0 if no, 1 if yes',
+  PRIMARY KEY (`voteid`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+
+-- Daten Export vom Benutzer nicht ausgewählt
+-- Exportiere Struktur von Tabelle vampdb.sonatable
 CREATE TABLE IF NOT EXISTS `sonatable` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` varchar(50) DEFAULT NULL,

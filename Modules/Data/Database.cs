@@ -94,6 +94,42 @@ namespace RicaBotpaw.Modules.Data
 		}
 
 		/// <summary>
+		/// Checks the existing vote by user.
+		/// </summary>
+		/// <param name="user">The user.</param>
+		/// <returns></returns>
+		/// <exception cref="Exception">You already voted on this poll</exception>
+		public static List<String> CheckExistingVoteByUser(IUser user)
+		{
+			var result = new List<String>();
+			var exists = 0; // Default. 0 = does not exist, 1 = does exist
+
+			var database = new Database("");
+
+			var str = string.Format("SELECT * FROM `pollvotes` WHERE user_id = '{0}'", user.Id);
+
+			var tableName = database.FireCommand(str);
+
+			while (tableName.Read())
+			{
+				var userId = (string)tableName["user_id"];
+				result.Add(userId);
+
+				if (result.Contains(user.Id.ToString()))
+				{
+					exists = 1;
+					throw new Exception("You already voted on this poll");
+				}
+				else
+				{
+					exists = 0;
+				}
+			}
+
+			return result;
+		}
+
+		/// <summary>
 		/// Checks if the user has opened a bank-account
 		/// </summary>
 		/// <param name="user">The user.</param>
@@ -129,7 +165,7 @@ namespace RicaBotpaw.Modules.Data
 
 			var database = new Database("");
 
-			var str = string.Format("SELECT * FROM `sonatable` WHERE user_id = '{0}'");
+			var str = string.Format("SELECT * FROM `sonatable` WHERE user_id = '{0}'", user.Id);
 
 			var tableName = database.FireCommand(str);
 
@@ -155,6 +191,45 @@ namespace RicaBotpaw.Modules.Data
 			var table = database.FireCommand(str);
 			database.CloseConnection();
 			return null;
+		}
+
+		/// <summary>
+		/// Gets the poll which has the current first id.
+		/// </summary>
+		/// <returns></returns>
+		public static List<poll> GetPoll()
+		{
+			var database = new Database("");
+
+			try
+			{
+				var result = new List<poll>();
+				var str = string.Format("SELECT * FROM `poll` WHERE poll_id = '1'");
+				var tableName = database.FireCommand(str);
+
+				while (tableName.Read())
+				{
+					var question = (string)tableName["question"];
+					var nQuestion = question.Replace("_", " ");
+					var voteYes = (int)tableName["voteyes"];
+					var voteNo = (int)tableName["voteno"];
+
+					result.Add(new poll
+					{
+						Question = nQuestion,
+						YesVotes = voteYes,
+						NoVotes = voteNo
+					});
+				}
+				database.CloseConnection();
+
+				return result;
+			}
+			catch (Exception e)
+			{
+				database.CloseConnection();
+				return null;
+			}
 		}
 
 		/// <summary>
@@ -504,7 +579,7 @@ namespace RicaBotpaw.Modules.Data
 		/// <param name="age">The age.</param>
 		/// <param name="species">The species.</param>
 		/// <param name="gender">The gender.</param>
-		/// <param name="sex">The sexuality.</param>
+		/// <param name="sex">The sex.</param>
 		public static void RegisterSona(IUser user, string name, int age, string species, string gender, string sex)
 		{
 			var database = new Database("");
@@ -514,7 +589,7 @@ namespace RicaBotpaw.Modules.Data
 
 			database.CloseConnection();
 
-			return; 
+			return;
 		}
 
 		/// <summary>
@@ -556,6 +631,107 @@ namespace RicaBotpaw.Modules.Data
 			database.CloseConnection();
 
 			return result;
+		}
+
+		// Polls
+
+		/// <summary>
+		/// Enters the poll.
+		/// </summary>
+		/// <param name="question">The question.</param>
+		public static void EnterPoll(string question, IUser user)
+		{
+			var database = new Database("");
+			var str = $"INSERT INTO `poll` (poll_id, question, voteyes, voteno, user_id) VALUES ('1', '{question.ToString()}', '0', '0', '{user.Id}')";
+
+			var table = database.FireCommand(str);
+			database.CloseConnection();
+
+			return;
+		}
+
+		/// <summary>
+		/// Enters the user vote.
+		/// </summary>
+		/// <param name="user">The user.</param>
+		/// <param name="vote">The vote.</param>
+		public static void EnterUserVote(IUser user, int vote)
+		{
+			var database = new Database("");
+			var str = string.Format("INSERT INTO `pollvotes` (user_id, vote) VALUES ('{0}', '{1}')", user.Id, vote);
+			var table = database.FireCommand(str);
+			database.CloseConnection();
+			return;
+		}
+
+		/// <summary>
+		/// If a user votes yes on the current running poll, then we are adding 1 vote for yes by using this method.
+		/// </summary>
+		public static void AddYesToPoll()
+		{
+			var database = new Database("");
+
+			try
+			{
+				var amountToAdd = 1;
+				var strings = $"UPDATE `poll` SET voteyes = voteyes + {amountToAdd} WHERE poll_id = 1";
+				var reader = database.FireCommand(strings);
+				reader.Close();
+				database.CloseConnection();
+				return;
+			}
+			catch (Exception e)
+			{
+				database.CloseConnection();
+				return;
+			}
+		}
+
+		/// <summary>
+		/// If a user votes no on the current running poll, then we are adding 1 vote for no by using this method.
+		/// </summary>
+		public static void AddNoToPoll()
+		{
+			var database = new Database("");
+
+			try
+			{
+				var amountToAdd = 1;
+				var strings = $"UPDATE `poll` SET voteno = voteno + {amountToAdd} WHERE poll_id = 1";
+				var reader = database.FireCommand(strings);
+				reader.Close();
+				database.CloseConnection();
+				return;
+			}
+			catch (Exception e)
+			{
+				database.CloseConnection();
+				return;
+			}
+		}
+
+		/// <summary>
+		/// Deletes the poll.
+		/// </summary>
+		public static void DeletePoll()
+		{
+			var database = new Database("");
+			var str = string.Format("DELETE FROM `poll` WHERE poll_id = 1");
+			var table = database.FireCommand(str);
+			database.CloseConnection();
+			return;
+		}
+
+		/// <summary>
+		/// Deletes the users in the current vote pool.
+		/// </summary>
+		public static void DeleteUserInVotePool()
+		{
+			var database = new Database("");
+			var str = string.Format("DELETE FROM `pollvotes`");
+			var table = database.FireCommand(str);
+			database.CloseConnection();
+			return;
 		}
 	}
 }

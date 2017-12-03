@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -549,6 +550,179 @@ namespace RicaBotpaw.Modules.Public
 		public async Task Donate()
 		{
 			await ReplyAsync("If you want to show your support to EnK_ for making me, you can do it over paypal!\nAny amount is accepted (Except an amount of 0) and will greatly help him in keeping this project running!\nYou can donate to him here: https://www.paypal.me/zi8tx");
+		}
+
+		/// <summary>
+		/// This is the subclass which is handled as a submodule of the public module and which handles all poll related things!
+		/// </summary>
+		/// <seealso cref="Discord.Commands.ModuleBase" />
+		[Group("poll")]
+		public class Poll : ModuleBase
+		{
+			/// <summary>
+			/// This is the string which helps us checking if a poll is currently running. If it says yes, then there can't be another poll made until it says no again
+			/// </summary>
+			static string _isAPollRunning = "no";
+
+			/// <summary>
+			/// Starts the poll.
+			/// </summary>
+			/// <param name="question">The question.</param>
+			/// <returns></returns>
+			[Command("start")]
+			[Remarks("Starts a poll")]
+			public async Task StartPoll(string question, [Remainder]IUser user = null)
+			{
+				if (_isAPollRunning.Equals("yes"))
+				{
+					await ReplyAsync("You cannot start a poll at the moment! Please wait until the current poll is over");
+				}
+
+				if (user == null)
+				{
+					user = Context.User;
+					_isAPollRunning = "yes";
+
+					var embed = new EmbedBuilder()
+					{
+						Color = new Color(56, 193, 25)
+					};
+
+					Database.EnterPoll(question, user);
+
+					embed.Title = $"{Context.User.Username} has started a poll!";
+
+					var tableName = Database.GetPoll();
+
+					embed.Description = ($"{Context.User.Username} has started a poll" + "\n\n" +
+										 ":arrow_right: Question: " + tableName.FirstOrDefault().Question + "\n" +
+										 ":arrow_right: Votes for yes: " + tableName.FirstOrDefault().YesVotes + "\n" +
+										 ":arrow_right: Votes for no: " + tableName.FirstOrDefault().NoVotes);
+
+					await Context.Channel.SendMessageAsync("", false, embed);
+				}
+				else
+				{
+					_isAPollRunning = "yes";
+
+					var embed = new EmbedBuilder()
+					{
+						Color = new Color(56, 193, 25)
+					};
+
+					Database.EnterPoll(question, user);
+
+					embed.Title = $"{Context.User.Username} has started a poll!";
+
+					var tableName = Database.GetPoll();
+
+					embed.Description = ($"{Context.User.Username} has started a poll" + "\n\n" +
+					                     ":arrow_right: Question: " + tableName.FirstOrDefault().Question + "\n" +
+					                     ":arrow_right: Votes for yes: " + tableName.FirstOrDefault().YesVotes + "\n" +
+					                     ":arrow_right: Votes for no: " + tableName.FirstOrDefault().NoVotes);
+
+					await Context.Channel.SendMessageAsync("", false, embed);
+				}
+			}
+
+
+			/// <summary>
+			/// Votes on the poll with a given specified decision.
+			/// </summary>
+			/// <param name="decision">The decision.</param>
+			/// <param name="user">The user.</param>
+			/// <returns></returns>
+			[Command("vote")]
+			[Remarks("Leave your vote here!")]
+			public async Task Vote(string decision, [Remainder]IUser user = null)
+			{
+				if (_isAPollRunning.Equals("no"))
+				{
+					await ReplyAsync("You cannot vote on a poll which is not running!");
+				}
+
+				if (user == null)
+				{
+					user = Context.User;
+					if (decision.Equals("yes"))
+					{
+						Database.CheckExistingVoteByUser(user);
+						Database.AddYesToPoll();
+						Database.EnterUserVote(user, 1);
+						await ReplyAsync("You successfully voted for yes on the current poll!");
+					}
+					else if (decision.Equals("no"))
+					{
+						Database.CheckExistingVoteByUser(user);
+						Database.AddNoToPoll();
+						Database.EnterUserVote(user, 0);
+						await ReplyAsync("You successfully voted for no on the current poll!");
+					}
+					else
+					{
+						await ReplyAsync("Invalid answer!");
+					}
+				}
+				else
+				{
+					if (decision.Equals("yes") || decision.Equals("Yes") || decision.Equals("YES"))
+					{
+						Database.CheckExistingVoteByUser(user);
+						Database.AddYesToPoll();
+						Database.EnterUserVote(user, 1);
+						await ReplyAsync("You successfully voted for yes on the current poll!");
+					}
+					else if (decision.Equals("no") || decision.Equals("No") || decision.Equals("NO"))
+					{
+						Database.CheckExistingVoteByUser(user);
+						Database.AddNoToPoll();
+						Database.EnterUserVote(user, 0);
+						await ReplyAsync("You successfully voted for no on the current poll!");
+					}
+					else
+					{
+						await ReplyAsync("Invalid answer!");
+					}
+				}
+			}
+
+			/// <summary>
+			/// Ends the poll.
+			/// </summary>
+			[Command("end")]
+			[Remarks("Ends your poll")]
+			public async Task EndPoll()
+			{ 
+				if (_isAPollRunning.Equals("no"))
+				{
+					await ReplyAsync("You cannot end a poll if there is nothing to end!");
+				}
+				else
+				{
+
+					var embed = new EmbedBuilder()
+					{
+						Color = new Color(56, 193, 25)
+					};
+
+					embed.Title = $"{Context.User.Username} has ended their poll!";
+
+					var tableName = Database.GetPoll();
+
+					embed.Description = ($"{Context.User.Username} has ended their poll" + "\n\n" +
+						"Here is the result:" + "\n" +
+						$":arrow_right: Question: {tableName.FirstOrDefault().Question}" + "\n" +
+						$":arrow_right: Votes for yes: {tableName.FirstOrDefault().YesVotes}" + "\n" +
+						$":arrow_right: Votes for no: {tableName.FirstOrDefault().NoVotes}");
+
+					await Context.Channel.SendMessageAsync("", false, embed);
+
+					_isAPollRunning = "no";
+
+					Database.DeletePoll();
+					Database.DeleteUserInVotePool();
+				}
+			}
 		}
 
 

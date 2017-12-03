@@ -1,7 +1,5 @@
 ﻿using System;
 
-// TODO: Convert this to json
-
 namespace RicaBotpaw.Config
 {
 	/// <summary>
@@ -15,7 +13,7 @@ namespace RicaBotpaw.Config
 		/// <value>
 		/// The bot version.
 		/// </value>
-		public static string BotVersion = "1.5.0";
+		public static string BotVersion = "1.7.1";
 
 		/// <summary>
 		/// Contains the bots build revision
@@ -23,7 +21,7 @@ namespace RicaBotpaw.Config
 		/// <value>
 		/// The build revision.
 		/// </value>
-		public static string BuildRevision = "2711170205_RB_140";
+		public static string BuildRevision = "0312171530_RB_171";
 
 		/// <summary>
 		/// Contains the bots author
@@ -47,6 +45,6 @@ namespace RicaBotpaw.Config
 		/// <value>
 		/// The database tables.
 		/// </value>
-		public static int BotTables = 3;
+		public static int BotTables = 5;
 	}
 }
