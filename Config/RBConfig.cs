@@ -13,7 +13,7 @@ namespace RicaBotpaw.Config
 		/// <value>
 		/// The bot version.
 		/// </value>
-		public static string BotVersion = "1.7.1";
+		public static string BotVersion = "1.7.2";
 
 		/// <summary>
 		/// Contains the bots build revision
@@ -21,7 +21,7 @@ namespace RicaBotpaw.Config
 		/// <value>
 		/// The build revision.
 		/// </value>
-		public static string BuildRevision = "0312171530_RB_171";
+		public static string BuildRevision = "0412171610_RB_172";
 
 		/// <summary>
 		/// Contains the bots author
