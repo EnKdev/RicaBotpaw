@@ -1,12 +1,4 @@
-﻿**___Rica Botpaw - Version 1.7.1___**
+﻿**___Rica Botpaw - Version 1.7.2___**
 -------------------------------------
-Simplified the poll system a bit!
-For example, earlier, you had to specify yourself in all cases to start, vote or end a poll.
-Now, you can simply leave that last bit.
-
-The new poll system usage is as followed:
-`;poll start <Question>` -> Start the poll. If your question has multiple words, then replace the spaces with underscores.
-`;poll vote <yes> or <no>` -> Let's you vote with yes or no on this poll.
-`;poll end` -> Ends your poll.
-
-On another notage: I implemented a duplication check for votes as well. Have fun voting!
+Added a security measurement to the polls.
+Other users now cannot end your poll.

@@ -565,6 +565,11 @@ namespace RicaBotpaw.Modules.Public
 			static string _isAPollRunning = "no";
 
 			/// <summary>
+			/// Security-Measure for preventing that other users end your poll
+			/// </summary>
+			private static string _userMadePoll = "";
+
+			/// <summary>
 			/// Starts the poll.
 			/// </summary>
 			/// <param name="question">The question.</param>
@@ -582,6 +587,7 @@ namespace RicaBotpaw.Modules.Public
 				{
 					user = Context.User;
 					_isAPollRunning = "yes";
+					_userMadePoll = user.Username;
 
 					var embed = new EmbedBuilder()
 					{
@@ -617,9 +623,9 @@ namespace RicaBotpaw.Modules.Public
 					var tableName = Database.GetPoll();
 
 					embed.Description = ($"{Context.User.Username} has started a poll" + "\n\n" +
-					                     ":arrow_right: Question: " + tableName.FirstOrDefault().Question + "\n" +
-					                     ":arrow_right: Votes for yes: " + tableName.FirstOrDefault().YesVotes + "\n" +
-					                     ":arrow_right: Votes for no: " + tableName.FirstOrDefault().NoVotes);
+										 ":arrow_right: Question: " + tableName.FirstOrDefault().Question + "\n" +
+										 ":arrow_right: Votes for yes: " + tableName.FirstOrDefault().YesVotes + "\n" +
+										 ":arrow_right: Votes for no: " + tableName.FirstOrDefault().NoVotes);
 
 					await Context.Channel.SendMessageAsync("", false, embed);
 				}
@@ -691,36 +697,79 @@ namespace RicaBotpaw.Modules.Public
 			/// </summary>
 			[Command("end")]
 			[Remarks("Ends your poll")]
-			public async Task EndPoll()
-			{ 
+			public async Task EndPoll([Remainder]IUser user = null)
+			{
 				if (_isAPollRunning.Equals("no"))
 				{
 					await ReplyAsync("You cannot end a poll if there is nothing to end!");
 				}
+
+				if (user == null)
+				{
+					user = Context.User;
+					if (_userMadePoll != user.Username)
+					{
+						await ReplyAsync("You cannot end a poll which wasn't opened by you!");
+					}
+					else
+					{
+						var embed = new EmbedBuilder()
+						{
+							Color = new Color(56, 193, 25)
+						};
+
+						embed.Title = $"{Context.User.Username} has ended their poll!";
+
+						var tableName = Database.GetPoll();
+
+						embed.Description = ($"{Context.User.Username} has ended their poll" + "\n\n" +
+							"Here is the result:" + "\n" +
+							$":arrow_right: Question: {tableName.FirstOrDefault().Question}" + "\n" +
+							$":arrow_right: Votes for yes: {tableName.FirstOrDefault().YesVotes}" + "\n" +
+							$":arrow_right: Votes for no: {tableName.FirstOrDefault().NoVotes}");
+
+						await Context.Channel.SendMessageAsync("", false, embed);
+
+						_isAPollRunning = "no";
+
+						Database.DeletePoll();
+						Database.DeleteUserInVotePool();
+
+						_userMadePoll = "";
+					}
+				}
 				else
 				{
-
-					var embed = new EmbedBuilder()
+					if (_userMadePoll != user.Username)
 					{
-						Color = new Color(56, 193, 25)
-					};
+						await ReplyAsync("You cannot end a poll which wasn't opened by you!");
+					}
+					else
+					{
+						var embed = new EmbedBuilder()
+						{
+							Color = new Color(56, 193, 25)
+						};
 
-					embed.Title = $"{Context.User.Username} has ended their poll!";
+						embed.Title = $"{Context.User.Username} has ended their poll!";
 
-					var tableName = Database.GetPoll();
+						var tableName = Database.GetPoll();
 
-					embed.Description = ($"{Context.User.Username} has ended their poll" + "\n\n" +
-						"Here is the result:" + "\n" +
-						$":arrow_right: Question: {tableName.FirstOrDefault().Question}" + "\n" +
-						$":arrow_right: Votes for yes: {tableName.FirstOrDefault().YesVotes}" + "\n" +
-						$":arrow_right: Votes for no: {tableName.FirstOrDefault().NoVotes}");
+						embed.Description = ($"{Context.User.Username} has ended their poll" + "\n\n" +
+							"Here is the result:" + "\n" +
+							$":arrow_right: Question: {tableName.FirstOrDefault().Question}" + "\n" +
+							$":arrow_right: Votes for yes: {tableName.FirstOrDefault().YesVotes}" + "\n" +
+							$":arrow_right: Votes for no: {tableName.FirstOrDefault().NoVotes}");
 
-					await Context.Channel.SendMessageAsync("", false, embed);
+						await Context.Channel.SendMessageAsync("", false, embed);
 
-					_isAPollRunning = "no";
+						_isAPollRunning = "no";
 
-					Database.DeletePoll();
-					Database.DeleteUserInVotePool();
+						Database.DeletePoll();
+						Database.DeleteUserInVotePool();
+
+						_userMadePoll = "";
+					}
 				}
 			}
 		}
