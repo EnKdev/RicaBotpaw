@@ -11,6 +11,7 @@ Current version: 1.7.2
 I have a trello roadmap set-up for every single planned feature for this bot.
 
 You can find it over here: [Roadmap](https://trello.com/b/n15qy5We/rica-botpaw-roadmap)
+
 ----------
 # Code of conduct:
 
