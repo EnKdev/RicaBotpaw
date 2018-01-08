@@ -13,23 +13,15 @@ namespace RicaBotpaw.Config
 		/// <value>
 		/// The bot version.
 		/// </value>
-<<<<<<< HEAD
 		public static string BotVersion = "1.8.1-bugfix";
-=======
-		public static string BotVersion = "1.7.2";
->>>>>>> origin/master
-
+		
 		/// <summary>
 		/// Contains the bots build revision
 		/// </summary>
 		/// <value>
 		/// The build revision.
 		/// </value>
-<<<<<<< HEAD
 		public static string BuildRevision = "0801181510_RB_181";
-=======
-		public static string BuildRevision = "0412171610_RB_172";
->>>>>>> origin/master
 
 		/// <summary>
 		/// Contains the bots author
