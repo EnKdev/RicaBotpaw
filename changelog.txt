@@ -1,0 +1,6 @@
+**__Rica Botpaw - Version 1.8.1__**
+---------------------------
+This is a short bugfix, nothing more about it.
+---------------------------
+Image Paths should've been hopefully fixed now.
+;enterdb and ;currency daily should hopefully work now (although the latter one is still a bit buggy)

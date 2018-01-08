@@ -81,12 +81,42 @@ namespace RicaBotpaw.Modules.Public
 			await dmChannel.SendMessageAsync("", false, builder.Build());
 		}
 
+		[Command("mhelp")]
+		[Alias("m")]
+		[Remarks("Shows specific information about the modules.")]
+		public async Task ModuleHelp()
+		{
+			var module = _service.Modules;
+			var emb = new EmbedBuilder();
+			emb.Color = new Color(114, 137, 218);
+			emb.Title = ($"Here is the information about all modules");
+
+			foreach (var match in _service.Modules)
+			{
+				emb.AddField(e =>
+				{
+					e.Name = ($"**{match.Name}**");
+					if (string.IsNullOrWhiteSpace(match.Remarks))
+					{
+						e.Value = $"*No remarks found*\nNumber of commands in this module: {match.Commands.Count}";
+					}
+					else
+					{
+						e.Value = ($"Remarks:\n***{match.Remarks}***\nNumber of commands in the modules: {match.Commands.Count}");
+					}
+					e.IsInline = false;
+				});
+			}
+			await ReplyAsync("", false, emb.Build());
+		}
+
 		/// <summary>
 		/// Command help!
 		/// </summary>
 		/// <param name="command">The command.</param>
 		/// <returns></returns>
-		[Command("help")]
+		[Command("chelp")]
+		[Alias("c")]
 		[Remarks("Shows what a specific command does and what parameters it takes.")]
 		public async Task HelpAsync(string command)
 		{
@@ -139,6 +169,23 @@ namespace RicaBotpaw.Modules.Public
 				await (Context.Client as DiscordSocketClient).SetGameAsync(game);
 				await Context.Channel.SendMessageAsync($"Successfully set the game to *{game}*");
 				Console.WriteLine($"{DateTime.Now}: Game was changed to {game}");
+			}
+		}
+
+		[Command("stop")]
+		[Remarks("Stops the bot. For updating processes")]
+		public async Task StopTask()
+		{
+			if (!(Context.User.Id == 112559794543468544))
+			{
+				await Context.Channel.SendMessageAsync("
+					You are unable to stop the bot. Only EnK_ can stop the bot.");
+			}
+			else
+			{
+				await Context.Channel.SendMessageAsync("
+					Good Bye!");
+				Environment.Exit(0);
 			}
 		}
 
@@ -225,14 +272,14 @@ namespace RicaBotpaw.Modules.Public
 				})
 				.AddField(y =>
 				{
-					y.Name = "RB Datatables";
-					y.Value = RBConfig.BotTables;
+					y.Name = "RB Databases";
+					y.Value = RBConfig.BotDatabases;
 					y.IsInline = true;
 				})
 				.AddField(y =>
 				{
 					y.Name = "Github Repository";
-					y.Value = "[Github](https://github.com/TheRealDreamzy/RicaBotpaw)";
+					y.Value = "[Github](https://github.com/zi8tx/RicaBotpaw)";
 					y.IsInline = false;
 				})
 				.AddField(y =>
@@ -398,7 +445,7 @@ namespace RicaBotpaw.Modules.Public
 		[Remarks("Returns Ricas Changelog which includes her version")]
 		public async Task Changelog()
 		{
-			await ReplyAsync(System.IO.File.ReadAllText(@"C:\Users\LordaS\Desktop\Rica Botpaw\RicaBotpaw\Modules\Public\changelog.txt"));
+			await ReplyAsync(System.IO.File.ReadAllText(@"changelog.txt"));
 		}
 
 
@@ -933,34 +980,38 @@ namespace RicaBotpaw.Modules.Public
 			[Remarks("Daily tokens and money! Yey!")]
 			public async Task Daily()
 			{
-				var user = Context.User;
-
-				var result = Database.CheckExistingUser(user);
-				if (result.Count <= 0)
-					Database.EnterUser(user);
-
-				var tableName = Database.GetUserStatus(user);
-				DateTime now = DateTime.Now;
-				DateTime daily = tableName.FirstOrDefault().Daily;
-				int diff = DateTime.Compare(daily, now);
-
-				if ((tableName.FirstOrDefault().Daily.ToString() == "2001-01-01 00:00:00") || (daily.DayOfYear < now.DayOfYear && diff < 0 || diff >= 0))
+				if (user == null)
 				{
-					Database.ChangeDaily(user);
-					int MoneyAmount = 150;
-					uint TokenAmount = 200;
-					Database.AddMoney2(user, MoneyAmount);
-					Database.ChangeTokens(user, TokenAmount);
+					user = Context.User;
+					var result = Database.CheckExistingUser(user);
 
-					await ReplyAsync($"You recieved your daily {MoneyAmount} Dollars and {TokenAmount} Prestige Tokens!");
-				}
-				else
-				{
-					TimeSpan diff2 = now - daily;
-					// This line prevents "Your dollars and tokens refresh in 00:18:57.0072170!"
-					TimeSpan di = new TimeSpan(23 - diff2.Hours, 60 - diff2.Minutes, 60 - diff2.Seconds);
+					if (result.Count() <= 0)
+					{
+						Database.EnterUser(user);
+					}
 
-					await ReplyAsync($"Your dollars and tokens refresh in {di}");
+					var tableName = Database.GetUserStatus(user);
+
+					DateTime now = DateTime.Now;
+					DateTime daily = tableName.FirstOrDefault().Daily;
+					int diff = DateTime.Compare(daily, now);
+
+					if ((tableName.FirstOrDefault().Daily.ToString() == "2001-01-01 00:00:00") ||
+						(daily.DayOfYear < now.DayOfYear && diff < 0 || diff >= 0))
+					{
+						Database.ChangeDaily(user);
+						int Money = 400;
+						uint Tokens = 250;
+						Database.ChangeTokens(user, Tokens);
+						Database.AddMoney2(user, Money);
+						await ReplyAsync($"You received your {Tokens} daily tokens and {Money} daily dollars!");
+					}
+					else
+					{
+						TimeSpan dif = now - daily;
+						TimeSpan di = new TimeSpan(23 - dif.Hours, 60 - dif.Minutes, 60 - dif.Seconds);
+						await ReplyAsync($"Your daily renews in {di}");
+					}
 				}
 			}
 

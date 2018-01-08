@@ -26,10 +26,12 @@ namespace RicaBotpaw.Modules.Games
 	{
 		// 8ball
 
+
+
 		/// <summary>
 		/// The eight ball predicts
 		/// </summary>
-		string[] eightBallPredicts = new string[]
+		private readonly string[] eightBallPredicts = new string[]
 		{
 			"It is very unlikely.",
 			"I don't think so...",
@@ -46,14 +48,14 @@ namespace RicaBotpaw.Modules.Games
 			"I am not a prediction"
 		};
 
-		string[] rps = new string[]
+		private readonly string[] rps = new string[]
 		{
 			"Rock",
 			"Paper",
 			"Scissors"
 		};
 
-		Random rand = new Random();
+		private readonly Random rand = new Random();
 
 		/// <summary>
 		/// The service
@@ -111,11 +113,17 @@ namespace RicaBotpaw.Modules.Games
 			{
 				await ReplyAsync("Is that a choice? I am confused.");
 			}
+			else if (input.Equals("Donald Trump"))
+			{
+				await ReplyAsync("Have a drawing donald made!");
+				await Context.Channel.SendFileAsync(
+					@".\images\DonaldDraws1511338722535.gif");
+			}
 			else
 			{
-				int randIdx = rand.Next(rps.Length);
-				string choice = rps[randIdx];
-				
+				var randIdx = rand.Next(rps.Length);
+				var choice = rps[randIdx];
+
 				// Rock
 				if (choice.Equals("Rock") && input.Equals("Rock"))
 				{
@@ -162,7 +170,7 @@ namespace RicaBotpaw.Modules.Games
 				else if (choice.Equals("Rock") && input.Equals("Nuke") || choice.Equals("Paper") && input.Equals("Nuke") || choice.Equals("Scissors") && input.Equals("Nuke"))
 				{
 					await ReplyAsync($"You chose a nuke. I chose {choice}. Guess it is not fun to play against Kim-Jong-Un");
-					await Context.Channel.SendFileAsync(@"C:\Users\LordaS\Desktop\Rica Botpaw\RicaBotpaw\images\nuke.gif");
+					await Context.Channel.SendFileAsync(@".\images\nuke.gif");
 				}
 
 				// If no input matches the required choices (Rock, Paper, Scissors, Nuke, DTRJ)

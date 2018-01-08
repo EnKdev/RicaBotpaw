@@ -1,4 +1,0 @@
-﻿**___Rica Botpaw - Version 1.7.2___**
--------------------------------------
-Added a security measurement to the polls.
-Other users now cannot end your poll.

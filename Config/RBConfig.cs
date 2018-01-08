@@ -13,7 +13,7 @@ namespace RicaBotpaw.Config
 		/// <value>
 		/// The bot version.
 		/// </value>
-		public static string BotVersion = "1.7.1";
+		public static string BotVersion = "1.8.1-bugfix";
 
 		/// <summary>
 		/// Contains the bots build revision
@@ -21,7 +21,7 @@ namespace RicaBotpaw.Config
 		/// <value>
 		/// The build revision.
 		/// </value>
-		public static string BuildRevision = "0312171530_RB_171";
+		public static string BuildRevision = "0801181510_RB_181";
 
 		/// <summary>
 		/// Contains the bots author
@@ -29,7 +29,7 @@ namespace RicaBotpaw.Config
 		/// <value>
 		/// The bot author.
 		/// </value>
-		public static string BotAuthor = "EnK_";
+		public static string BotAuthor = "EnK_/zi8tx/R3sharp";
 
 		/// <summary>
 		/// Contains the bots module count
@@ -45,6 +45,6 @@ namespace RicaBotpaw.Config
 		/// <value>
 		/// The database tables.
 		/// </value>
-		public static int BotTables = 5;
+		public static int BotDatabases = 1;
 	}
 }
