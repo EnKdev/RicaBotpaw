@@ -11,15 +11,24 @@
 		/// <value>
 		///     The bot version.
 		/// </value>
+<<<<<<< HEAD
 		public static string BotVersion = "1.8.3";
 
+=======
+		public static string BotVersion = "1.8.1-bugfix";
+		
+>>>>>>> origin/master
 		/// <summary>
 		///     Contains the bots build revision
 		/// </summary>
 		/// <value>
 		///     The build revision.
 		/// </value>
+<<<<<<< HEAD
 		public static string BuildRevision = "2901182220_RB_183";
+=======
+		public static string BuildRevision = "0801181510_RB_181";
+>>>>>>> origin/master
 
 		/// <summary>
 		///     Contains the bots author
