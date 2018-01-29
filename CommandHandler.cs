@@ -1,31 +1,34 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Timers;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using System.Linq;
 using RicaBotpaw.Modules.Data;
-using Discord;
-using System;
-using System.Diagnostics;
 
 namespace RicaBotpaw
 {
 	/// <summary>
-	/// This is the commandhandler where all modules get registered
+	///     This is the commandhandler where all modules get registered
 	/// </summary>
 	public class CommandHandler
-  {
+	{
 		/// <summary>
-		/// The CMDS
-		/// </summary>
-		private CommandService _cmds;
-		/// <summary>
-		/// The client
+		///     The client
 		/// </summary>
 		private DiscordSocketClient _client;
 
 		/// <summary>
-		/// a Timer
+		///     The CMDS
+		/// </summary>
+		private CommandService _cmds;
+
+		/// <summary>
+		/// a timer
 		/// </summary>
 		private static System.Timers.Timer aTimer;
 
@@ -49,57 +52,62 @@ namespace RicaBotpaw
 		};
 
 		/// <summary>
-		/// This "installs" all modules into the handler and registers their commands
+		/// The rand status
+		/// </summary>
+		private Random randStatus = new Random();
+
+		/// <summary>
+		///     This "installs" all modules into the handler and registers their commands
 		/// </summary>
 		/// <param name="c">The c.</param>
 		/// <returns></returns>
 		public async Task Install(DiscordSocketClient c)
-    {
-            _client = c;
-            _cmds = new CommandService();
+		{
+			_client = c;
+			_cmds = new CommandService();
 
-            await _cmds.AddModulesAsync(Assembly.GetEntryAssembly());
+			await _cmds.AddModulesAsync(Assembly.GetEntryAssembly());
 
-            _client.MessageReceived += HandleCommand;
-						_client.Ready += onReady;
-						_client.UserJoined += onJoin;
-						_client.UserLeft += onLeave;
-						_client.MessageReceived += giveXP;
-    }
+			_client.MessageReceived += HandleCommand;
+			_client.Ready += onReady;
+			_client.UserJoined += onJoin;
+			_client.UserLeft += onLeave;
+			_client.MessageReceived += giveXP;
+		}
 
 		/// <summary>
-		/// This is the actual commandhandler
+		///     This is the actual commandhandler
 		/// </summary>
 		/// <param name="s">The s.</param>
 		/// <returns></returns>
 		public async Task HandleCommand(SocketMessage s)
-    {
-        var msg = s as SocketUserMessage;
-        if (msg == null) return;
+		{
+			var msg = s as SocketUserMessage;
+			if (msg == null) return;
 
-        var context = new CommandContext(_client, msg);
+			var context = new CommandContext(_client, msg);
 
-        int argPos = 0;
-        if (msg.HasStringPrefix(";", ref argPos) || msg.HasMentionPrefix(_client.CurrentUser, ref argPos))
-        {
-            var result = await _cmds.ExecuteAsync(context, argPos);
+			var argPos = 0;
+			if (msg.HasStringPrefix(";", ref argPos) || msg.HasMentionPrefix(_client.CurrentUser, ref argPos))
+			{
+				var result = await _cmds.ExecuteAsync(context, argPos);
 
-            if (!result.IsSuccess) await context.Channel.SendMessageAsync(result.ToString());
-        }
-    }
+				if (!result.IsSuccess) await context.Channel.SendMessageAsync(result.ToString());
+			}
+		}
 
 		/// <summary>
-		/// When the bot is ready, this will be triggered
+		///     When the bot is ready, this will be triggered
 		/// </summary>
 		/// <returns></returns>
 		public async Task onReady()
 		{
-			await _client.SetGameAsync("For help, use ;help");
+			await _client.SetGameAsync("For help, use ;help"); // Default first status.
 			await CheckTime();
 		}
 
 		/// <summary>
-		/// When a new user joins a guild, this will be triggered
+		///     When a new user joins a guild, this will be triggered
 		/// </summary>
 		/// <param name="user">The user.</param>
 		/// <returns></returns>
@@ -110,7 +118,7 @@ namespace RicaBotpaw
 		}
 
 		/// <summary>
-		/// When a user leaves a guild, this will be triggered
+		///     When a user leaves a guild, this will be triggered
 		/// </summary>
 		/// <param name="user">The user.</param>
 		/// <returns></returns>
@@ -121,7 +129,7 @@ namespace RicaBotpaw
 		}
 
 		/// <summary>
-		/// This is what gives a user the XP and also it levels them up.
+		///     This is what gives a user the XP and also it levels them up.
 		/// </summary>
 		/// <param name="msg">The MSG.</param>
 		/// <returns></returns>
@@ -131,9 +139,7 @@ namespace RicaBotpaw
 			var result = Database.CheckExistingUser(user);
 
 			if (result.Count <= 0 && user.IsBot != true)
-			{
 				Database.EnterUser(user);
-			}
 
 			var userData = Database.GetUserStatus(user).FirstOrDefault();
 			var xp = XP.returnXP(msg);
@@ -162,14 +168,14 @@ namespace RicaBotpaw
 
 		public async Task CheckTime()
 		{
-			var signalTime = DateTime.now;
+			var signalTime = DateTime.Now;
 			aTimer = new System.Timers.Timer();
 			aTimer.Interval = 300000; // 2.5 Minutes = 150000 (Testing)
-			aTiner.Elapsed += OnTimedEvent;
+			aTimer.Elapsed += OnTimedEvent;
 			aTimer.AutoReset = true;
 			aTimer.Enabled = true;
 			Console.ForegroundColor = ConsoleColor.Yellow;
-			Console.WriteLine($"[StatusTimer] Timer has been started at {signalTime}. Status changes each 5 (300 seconds) minutes now.");
+			Console.WriteLine($"[StatusTimer] Timer has been started at {signalTime}. Statuses change each 5 (300 seconds) minutes now.");
 			Console.ForegroundColor = ConsoleColor.White;
 		}
 

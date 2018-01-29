@@ -4,24 +4,24 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using System.Runtime.InteropServices;
-using System.Diagnostics;
+using RicaBotpaw.Modules.Data;
 
 namespace RicaBotpaw.Modules.Admin
 {
 	/// <summary>
-	/// This is the class for all of the bots admintools
+	///     This is the class for all of the bots admintools
 	/// </summary>
 	/// <seealso cref="Discord.Commands.ModuleBase" />
+	[Remarks("This is the administrative module for server owners.")]
 	public class Admintools : ModuleBase
 	{
 		/// <summary>
-		/// The service
+		///     The service
 		/// </summary>
 		private CommandService _service;
 
 		/// <summary>
-		/// This registers the AdminModule into the commandhandler
+		///     This registers the AdminModule into the commandhandler
 		/// </summary>
 		/// <param name="service">The service.</param>
 		public Admintools(CommandService service)
@@ -34,11 +34,12 @@ namespace RicaBotpaw.Modules.Admin
 		/// </summary>
 		/// <param name="del">The delete.</param>
 		/// <returns></returns>
-		[Command("purge")]
+		[Command("purge", RunMode = RunMode.Async)]
 		[Remarks("Clears the chat by a specified amount of messages.")]
+		[RequireUserPermission(GuildPermission.ManageMessages)]
 		public async Task purge([Remainder] int del = 0)
 		{
-			IGuildUser Bot = await Context.Guild.GetUserAsync(Context.Client.CurrentUser.Id);
+			var Bot = await Context.Guild.GetUserAsync(Context.Client.CurrentUser.Id);
 			if (!Bot.GetPermissions(Context.Channel as ITextChannel).ManageMessages)
 			{
 				await Context.Channel.SendMessageAsync("`Bot does not have enough permissions to manage messages`");
@@ -55,11 +56,10 @@ namespace RicaBotpaw.Modules.Admin
 			}
 
 			if (del == null)
-			{
-				await Context.Channel.SendMessageAsync("`You need to specify the amount | ;clear (amount) | Replace (amount) with anything`");
-			}
+				await Context.Channel.SendMessageAsync(
+					"`You need to specify the amount | ;clear (amount) | Replace (amount) with anything`");
 
-			int a = 0;
+			var a = 0;
 			foreach (var Item in await Context.Channel.GetMessagesAsync(del).Flatten())
 			{
 				a++;
@@ -68,6 +68,7 @@ namespace RicaBotpaw.Modules.Admin
 
 			await Context.Channel.SendMessageAsync($"`{Context.User.Username} purged {a} messages`");
 		}
+
 
 		/// <summary>
 		/// Bans a bad user
@@ -80,7 +81,7 @@ namespace RicaBotpaw.Modules.Admin
 		/// or
 		/// You must provide a reason
 		/// </exception>
-		[Command("ban")]
+		[Command("ban", RunMode = RunMode.Async)]
 		[Remarks("Bans @user")]
 		[RequireUserPermission(GuildPermission.BanMembers)]
 		[RequireBotPermission(GuildPermission.BanMembers)]
@@ -100,12 +101,14 @@ namespace RicaBotpaw.Modules.Admin
 			else
 			{
 				embed.Title = $"**{user.Username}** was banned";
-				embed.Description = $"**Username: **{user.Username}\n**Guild Name: **{user.Guild.Name}\n**Banned by: **{Context.User.Mention}!\n**Reason: **{reason}";
+				embed.Description =
+					$"**Username: **{user.Username}\n**Guild Name: **{user.Guild.Name}\n**Banned by: **{Context.User.Mention}!\n**Reason: **{reason}";
 
 				await gld.AddBanAsync(user);
 				await Context.Channel.SendMessageAsync("", false, embed);
 			}
 		}
+
 
 		/// <summary>
 		/// Kicks a bad user
@@ -113,12 +116,10 @@ namespace RicaBotpaw.Modules.Admin
 		/// <param name="user">The user.</param>
 		/// <param name="reason">The reason.</param>
 		/// <returns></returns>
-		/// <exception cref="ArgumentException">
-		/// You must mention a user
+		/// <exception cref="ArgumentException">You must mention a user
 		/// or
-		/// You must provide a reason
-		/// </exception>
-		[Command("kick")]
+		/// You must provide a reason</exception>
+		[Command("kick", RunMode = RunMode.Async)]
 		[Remarks("Kicks @user")]
 		[RequireUserPermission(GuildPermission.KickMembers)]
 		[RequireBotPermission(GuildPermission.KickMembers)]
@@ -137,7 +138,8 @@ namespace RicaBotpaw.Modules.Admin
 				var embed = new EmbedBuilder();
 				embed.WithColor(new Color(0x4900ff));
 				embed.Title = $" {user.Username} has been kicked from {user.Guild.Name}";
-				embed.Description = $"**Username: **{user.Username}\n**Guild Name: **{user.Guild.Name}\n**Kicked by: **{Context.User.Mention}!\n**Reason: **{reason}";
+				embed.Description =
+					$"**Username: **{user.Username}\n**Guild Name: **{user.Guild.Name}\n**Kicked by: **{Context.User.Mention}!\n**Reason: **{reason}";
 
 				await user.KickAsync();
 				await Context.Channel.SendMessageAsync("", false, embed);

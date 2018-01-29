@@ -1,41 +1,39 @@
-﻿using System;
-
-namespace RicaBotpaw.Modules.Data
+﻿namespace RicaBotpaw.Modules.Data
 {
 	/// <summary>
-	/// The poll table class
+	///     The poll table class
 	/// </summary>
 	public class poll
 	{
 		/// <summary>
-		/// Gets or sets the question.
+		///     Gets or sets the question.
 		/// </summary>
 		/// <value>
-		/// The question.
+		///     The question.
 		/// </value>
 		public string Question { get; set; }
 
 		/// <summary>
-		/// Gets or sets the yes votes.
+		///     Gets or sets the yes votes.
 		/// </summary>
 		/// <value>
-		/// The yes votes.
+		///     The yes votes.
 		/// </value>
 		public int YesVotes { get; set; }
 
 		/// <summary>
-		/// Gets or sets the no votes.
+		///     Gets or sets the no votes.
 		/// </summary>
 		/// <value>
-		/// The no votes.
+		///     The no votes.
 		/// </value>
 		public int NoVotes { get; set; }
 
 		/// <summary>
-		/// Gets or sets the user identifier.
+		///     Gets or sets the user identifier.
 		/// </summary>
 		/// <value>
-		/// The user identifier.
+		///     The user identifier.
 		/// </value>
 		public string UserId { get; set; }
 	}

@@ -16,6 +16,9 @@ using Newtonsoft.Json.Linq;
 using RicaBotpaw.Config;
 using Newtonsoft.Json;
 using System.IO;
+using System.Threading;
+using System.Timers;
+using ImageSharp.Formats;
 using Urban.NET;
 
 namespace RicaBotpaw.Modules.Public
@@ -24,6 +27,7 @@ namespace RicaBotpaw.Modules.Public
 	/// The public module
 	/// </summary>
 	/// <seealso cref="Discord.Commands.ModuleBase" />
+	[Remarks("This is the public module. It contains all available commands for everyone.")]
 	public class Public : ModuleBase
 	{
 		/// <summary>
@@ -44,111 +48,136 @@ namespace RicaBotpaw.Modules.Public
 		/// Sometimes you need help...
 		/// </summary>
 		/// <returns></returns>
-		[Command("help")]
+		[Command("help", RunMode = RunMode.Async)]
 		[Remarks("Shows a list of all available commands per module")]
 		public async Task HelpAsync()
 		{
-			var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-
-			string prefix = ";";
-			var builder = new EmbedBuilder()
+			if (BotCooldown.isCooldownRunning == false)
 			{
-				Color = new Color(114, 137, 218),
-				Description = "These are the commands you can use"
-			};
+				var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
 
-			foreach (var module in _service.Modules)
-			{
-				string description = null;
-				foreach (var cmd in module.Commands)
+				string prefix = ";";
+				var builder = new EmbedBuilder()
 				{
-					var result = await cmd.CheckPreconditionsAsync(Context);
-					if (result.IsSuccess)
-						description += $"{prefix}{cmd.Aliases.First()}\n";
-				}
+					Color = new Color(114, 137, 218),
+					Description = "These are the commands you can use"
+				};
 
-				if (!string.IsNullOrWhiteSpace(description))
+				foreach (var module in _service.Modules)
 				{
-					builder.AddField(x =>
+					string description = null;
+					foreach (var cmd in module.Commands)
 					{
-						x.Name = module.Name;
-						x.Value = description;
-						x.IsInline = false;
-					});
-				}
-			}
+						var result = await cmd.CheckPreconditionsAsync(Context);
+						if (result.IsSuccess)
+							description += $"{prefix}{cmd.Aliases.First()}\n";
+					}
 
-			await dmChannel.SendMessageAsync("", false, builder.Build());
+					if (!string.IsNullOrWhiteSpace(description))
+					{
+						builder.AddField(x =>
+						{
+							x.Name = module.Name;
+							x.Value = description;
+							x.IsInline = false;
+						});
+					}
+				}
+
+				await dmChannel.SendMessageAsync("", false, builder.Build());
+				await BotCooldown.Cooldown();
+			}
+			else
+			{
+				await ReplyAsync(BotCooldown.cooldownMsg);
+			}
 		}
 
-		[Command("mhelp")]
+		[Command("mhelp", RunMode = RunMode.Async)]
 		[Alias("m")]
 		[Remarks("Shows specific information about the modules.")]
 		public async Task ModuleHelp()
 		{
-			var module = _service.Modules;
-			var emb = new EmbedBuilder();
-			emb.Color = new Color(114, 137, 218);
-			emb.Title = ($"Here is the information about all modules");
-
-			foreach (var match in _service.Modules)
+			if (BotCooldown.isCooldownRunning == false)
 			{
-				emb.AddField(e =>
+				var module = _service.Modules;
+				var emb = new EmbedBuilder();
+				emb.Color = new Color(114, 137, 218);
+				emb.Title = ($"Here is the information about all modules");
+
+				foreach (var match in _service.Modules)
 				{
-					e.Name = ($"**{match.Name}**");
-					if (string.IsNullOrWhiteSpace(match.Remarks))
+					emb.AddField(e =>
 					{
-						e.Value = $"*No remarks found*\nNumber of commands in this module: {match.Commands.Count}";
-					}
-					else
-					{
-						e.Value = ($"Remarks:\n***{match.Remarks}***\nNumber of commands in the modules: {match.Commands.Count}");
-					}
-					e.IsInline = false;
-				});
+						e.Name = ($"**{match.Name}**");
+						if (string.IsNullOrWhiteSpace(match.Remarks))
+						{
+							e.Value = $"*No remarks found*\nNumber of commands in this module: {match.Commands.Count}";
+						}
+						else
+						{
+							e.Value = ($"Remarks:\n***{match.Remarks}***\nNumber of commands in the modules: {match.Commands.Count}");
+						}
+						e.IsInline = false;
+					});
+				}
+				await ReplyAsync("", false, emb.Build());
+				await BotCooldown.Cooldown();
 			}
-			await ReplyAsync("", false, emb.Build());
+			else
+			{
+				await ReplyAsync(BotCooldown.cooldownMsg);
+			}
 		}
+
 
 		/// <summary>
 		/// Command help!
 		/// </summary>
 		/// <param name="command">The command.</param>
 		/// <returns></returns>
-		[Command("chelp")]
+		[Command("chelp", RunMode = RunMode.Async)]
 		[Alias("c")]
 		[Remarks("Shows what a specific command does and what parameters it takes.")]
 		public async Task HelpAsync(string command)
 		{
-			var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-			var result = _service.Search(Context, command);
-
-			if (!result.IsSuccess)
+			if (BotCooldown.isCooldownRunning == false)
 			{
-				await ReplyAsync($"Sorry, but it seems that i don't know a command like **{command}**...");
-				return;
-			}
+				var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
+				var result = _service.Search(Context, command);
 
-			string prefix = ";";
-			var builder = new EmbedBuilder()
-			{
-				Color = new Color(114, 137, 218),
-				Description = $"Here are some commands like **{command}**"
-			};
-
-			foreach (var match in result.Commands)
-			{
-				var cmd = match.Command;
-
-				builder.AddField(x =>
+				if (!result.IsSuccess)
 				{
-					x.Name = string.Join(", ", cmd.Aliases);
-					x.Value = $"Parameters: {string.Join(", ", cmd.Parameters.Select(p => p.Name))}\n" + $"Remarks: {cmd.Remarks}";
-					x.IsInline = false;
-				});
-			}
+					await ReplyAsync($"Sorry, but it seems that i don't know a command like **{command}**...");
+					return;
+				}
 
-			await dmChannel.SendMessageAsync("", false, builder.Build());
+				string prefix = ";";
+				var builder = new EmbedBuilder()
+				{
+					Color = new Color(114, 137, 218),
+					Description = $"Here are some commands like **{command}**"
+				};
+
+				foreach (var match in result.Commands)
+				{
+					var cmd = match.Command;
+
+					builder.AddField(x =>
+					{
+						x.Name = string.Join(", ", cmd.Aliases);
+						x.Value = $"Parameters: {string.Join(", ", cmd.Parameters.Select(p => p.Name))}\n" + $"Remarks: {cmd.Remarks}";
+						x.IsInline = false;
+					});
+				}
+
+				await dmChannel.SendMessageAsync("", false, builder.Build());
+				await BotCooldown.Cooldown();
+			}
+			else
+			{
+				await ReplyAsync(BotCooldown.cooldownMsg);
+			}
 		}
 
 		/// <summary>
@@ -156,242 +185,291 @@ namespace RicaBotpaw.Modules.Public
 		/// </summary>
 		/// <param name="game">The game.</param>
 		/// <returns></returns>
-		[Command("setgame")]
+		[Command("setgame", RunMode = RunMode.Async)]
 		[Remarks("Sets a new game for the bot")]
-		public async Task setGame([Remainder] string game)
+		public async Task SetGame([Remainder] string game)
 		{
-			if (!(Context.User.Id == 112559794543468544))
+			if (BotCooldown.isCooldownRunning == false)
 			{
-				await Context.Channel.SendMessageAsync("You do not have permission to change my game. Contact EnK_#8906 if you think this is wrong");
+				if (!(Context.User.Id == 112559794543468544))
+				{
+					await Context.Channel.SendMessageAsync(
+						"You do not have permission to change my game as only my Master has it.");
+					await BotCooldown.Cooldown();
+				}
+				else
+				{
+					await (Context.Client as DiscordSocketClient).SetGameAsync(game);
+					await Context.Channel.SendMessageAsync($"Successfully set the game to *{game}*");
+					Console.WriteLine($"{DateTime.Now}: Game was changed to {game}");
+					await BotCooldown.Cooldown();
+				}
 			}
 			else
 			{
-				await (Context.Client as DiscordSocketClient).SetGameAsync(game);
-				await Context.Channel.SendMessageAsync($"Successfully set the game to *{game}*");
-				Console.WriteLine($"{DateTime.Now}: Game was changed to {game}");
+				await ReplyAsync(BotCooldown.cooldownMsg);
 			}
 		}
 
-		[Command("stop")]
-		[Remarks("Stops the bot. For updating processes")]
+		[Command("stop", RunMode = RunMode.Async)]
+		[Remarks("Stops the bot. For updating processes.")]
 		public async Task StopTask()
 		{
-			if (!(Context.User.Id == 112559794543468544))
+			if (BotCooldown.isCooldownRunning == false)
 			{
-				await Context.Channel.SendMessageAsync("
-					You are unable to stop the bot. Only EnK_ can stop the bot.");
+				if (!(Context.User.Id == 112559794543468544))
+				{
+					await Context.Channel.SendMessageAsync(
+						"You are unable to stop the bot. Only EnK_ can stop the bot.");
+					await BotCooldown.Cooldown();
+				}
+				else
+				{
+					await Context.Channel.SendMessageAsync(
+						"Good bye!");
+					Environment.Exit(0);
+				}
 			}
 			else
 			{
-				await Context.Channel.SendMessageAsync("
-					Good Bye!");
-				Environment.Exit(0);
+				await ReplyAsync(BotCooldown.cooldownMsg);
 			}
 		}
+
 
 		/// <summary>
 		/// Returns the bot info
 		/// </summary>
 		/// <returns></returns>
-		[Command("botinfo")]
+		[Command("botinfo", RunMode = RunMode.Async)]
 		[Remarks("Shows all of the bot info")]
 		public async Task Info()
 		{
-			using (var process = Process.GetCurrentProcess())
+			if (BotCooldown.isCooldownRunning == false)
 			{
-				var embed = new EmbedBuilder();
-				var application = await Context.Client.GetApplicationInfoAsync();
-				embed.ImageUrl = application.IconUrl;
-				embed.WithColor(new Color(0x4900ff))
-				.AddField(y =>
+				using (var process = Process.GetCurrentProcess())
 				{
-					y.Name = "Bot Author";
-					y.Value = RBConfig.BotAuthor;
-					y.IsInline = false;
-				})
-				.AddField(y =>
-				{
-					y.Name = "Uptime";
-					var time = DateTime.Now - process.StartTime;
-					var sb = new StringBuilder();
+					var embed = new EmbedBuilder();
+					var application = await Context.Client.GetApplicationInfoAsync();
+					embed.ImageUrl = application.IconUrl;
+					embed.WithColor(new Color(0x4900ff))
+						// Generic Information
+						.AddField(y =>
+						{
+							y.Name = "Bot Author";
+							y.Value = RBConfig.BotAuthor;
+							y.IsInline = true;
+						})
+						.AddField(y =>
+						{
+							y.Name = "Uptime";
+							var time = DateTime.Now - process.StartTime;
+							var sb = new StringBuilder();
 
-					if (time.Days > 0)
-					{
-						sb.Append($"{time.Days}d ");
-					}
+							if (time.Days > 0)
+							{
+								sb.Append($"{time.Days}d ");
+							}
 
-					if (time.Hours > 0)
-					{
-						sb.Append($"{time.Hours}h ");
-					}
+							if (time.Hours > 0)
+							{
+								sb.Append($"{time.Hours}h ");
+							}
 
-					if (time.Minutes > 0)
-					{
-						sb.Append($"{time.Minutes}m ");
-					}
+							if (time.Minutes > 0)
+							{
+								sb.Append($"{time.Minutes}m ");
+							}
 
-					sb.Append($"{time.Seconds}s ");
-					y.Value = sb.ToString();
-					y.IsInline = true;
-				})
-				.AddField(y =>
-				{
-					y.Name = "Discord.NET Version";
-					y.Value = DiscordConfig.Version;
-					y.IsInline = true;
-				})
-				.AddField(y =>
-				{
-					y.Name = "RBIC Version";
-					y.Value = ImageCoreConfig.Version;
-					y.IsInline = false;
-				})
-				.AddField(y =>
-				{
-					y.Name = "RBIC Build Revision";
-					y.Value = ImageCoreConfig.BuildRevision;
-					y.IsInline = false;
-				})
-				.AddField(y =>
-				{
-					y.Name = "RB Version";
-					y.Value = RBConfig.BotVersion;
-					y.IsInline = true;
-				})
-				.AddField(y =>
-				{
-					y.Name = "RB Build Revision";
-					y.Value = RBConfig.BuildRevision;
-					y.IsInline = true;
-				})
-				.AddField(y =>
-				{
-					y.Name = "RB Modules";
-					y.Value = RBConfig.ModuleCount;
-					y.IsInline = true;
-				})
-				.AddField(y =>
-				{
-					y.Name = "RB Databases";
-					y.Value = RBConfig.BotDatabases;
-					y.IsInline = true;
-				})
-				.AddField(y =>
-				{
-					y.Name = "Github Repository";
-					y.Value = "[Github](https://github.com/zi8tx/RicaBotpaw)";
-					y.IsInline = false;
-				})
-				.AddField(y =>
-				{
-					y.Name = "Heap size";
-					y.Value = GetHeapSize();
-					y.IsInline = false;
-				})
-				.AddField(y =>
-				{
-					y.Name = "Members";
-					y.Value = (Context.Client as DiscordSocketClient).Guilds.Sum(g => g.Users.Count).ToString();
-					y.IsInline = false;
-				})
-				.AddField(y =>
-				{
-					y.Name = "Channels";
-					y.Value = (Context.Client as DiscordSocketClient).Guilds.Sum(g => g.Channels.Count).ToString();
-					y.IsInline = false;
-				});
+							sb.Append($"{time.Seconds}s ");
+							y.Value = sb.ToString();
+							y.IsInline = true;
+						})
+						.AddField(y =>
+						{
+							y.Name = "Discord.NET Version";
+							y.Value = DiscordConfig.Version;
+							y.IsInline = true;
+						})
+						.AddField(y =>
+						{
+							y.Name = "RBIC Version";
+							y.Value = ImageCoreConfig.Version;
+							y.IsInline = true;
+						})
+						.AddField(y =>
+						{
+							y.Name = "RBIC Build Revision";
+							y.Value = ImageCoreConfig.BuildRevision;
+							y.IsInline = true;
+						})
+						.AddField(y =>
+						{
+							y.Name = "RB Version";
+							y.Value = RBConfig.BotVersion;
+							y.IsInline = false;
+						})
+						.AddField(y =>
+						{
+							y.Name = "RB Build Revision";
+							y.Value = RBConfig.BuildRevision;
+							y.IsInline = true;
+						})
+						.AddField(y =>
+						{
+							y.Name = "RB Modules";
+							y.Value = RBConfig.ModuleCount;
+							y.IsInline = true;
+						})
+						.AddField(y =>
+						{
+							y.Name = "RB Databases";
+							y.Value = RBConfig.BotDatabases;
+							y.IsInline = true;
+						})
+						.AddField(y =>
+						{
+							y.Name = "Github Repository";
+							y.Value = "[Github](https://github.com/TheRealDreamzy/RicaBotpaw)";
+							y.IsInline = false;
+						})
+						.AddField(y =>
+						{
+							y.Name = "Heap size";
+							y.Value = GetHeapSize();
+							y.IsInline = false;
+						})
+						.AddField(y =>
+						{
+							y.Name = "Members";
+							y.Value = (Context.Client as DiscordSocketClient).Guilds.Sum(g => g.Users.Count).ToString();
+							y.IsInline = false;
+						})
+						.AddField(y =>
+						{
+							y.Name = "Channels";
+							y.Value = (Context.Client as DiscordSocketClient).Guilds.Sum(g => g.Channels.Count).ToString();
+							y.IsInline = false;
+						});
 
-				await this.ReplyAsync("", embed: embed);
+					await this.ReplyAsync("", embed: embed);
+					await BotCooldown.Cooldown();
+				}
+			}
+			else
+			{
+				await ReplyAsync(BotCooldown.cooldownMsg);
 			}
 		}
-
-		/// <summary>
-		/// Returns the uptime in botinfo
-		/// </summary>
-		/// <returns></returns>
-		private static string GetUptime() => (DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"dd\.hh\:mm\:ss");
 
 		/// <summary>
 		/// Calculates the bots heapsize
 		/// </summary>
 		/// <returns></returns>
-		private static string GetHeapSize() => Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2).ToString();
+		private static string GetHeapSize() =>
+			Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2).ToString();
 
 		/// <summary>
 		/// Returns info about a discord user
 		/// </summary>
 		/// <param name="user">The user.</param>
 		/// <returns></returns>
-		[Command("userinfo")]
+		[Command("userinfo", RunMode = RunMode.Async)]
 		[Alias("uinfo")]
 		[Name("userinfo `<user>`")]
 		[Remarks("Returns one users info")]
 		public async Task UserInfo(IGuildUser user)
 		{
-			var application = await Context.Client.GetApplicationInfoAsync();
-			var thumbnailUrl = user.GetAvatarUrl(ImageFormat.Png);
-			var date = $"{user.CreatedAt.Day}/{user.CreatedAt.Month}/{user.CreatedAt.Year}";
-
-			var auth = new EmbedAuthorBuilder()
+			if (BotCooldown.isCooldownRunning == false)
 			{
-				Name = user.Username,
-				IconUrl = thumbnailUrl
-			};
+				var application = await Context.Client.GetApplicationInfoAsync();
+				var thumbnailUrl = user.GetAvatarUrl(ImageFormat.Png);
+				var date = $"{user.CreatedAt.Day}/{user.CreatedAt.Month}/{user.CreatedAt.Year}";
 
-			var embed = new EmbedBuilder()
+				var auth = new EmbedAuthorBuilder()
+				{
+					Name = user.Username,
+					IconUrl = thumbnailUrl
+				};
+
+				var embed = new EmbedBuilder()
+				{
+					Color = new Color(29, 140, 209),
+					Author = auth
+				};
+
+				var us = user as SocketGuildUser;
+
+				var D = us.Username;
+
+				var A = us.Discriminator;
+				var T = us.Id;
+				var S = date;
+				var C = us.Status;
+				var CC = us.JoinedAt;
+				var O = us.Game;
+				embed.Title = $"**{us.Username}** Information";
+				embed.Description =
+					$"Username: **{D}**\nDiscriminator: **{A}**\nUser ID: **{T}**\nCreated at: **{S}**\nCurrent Status: **{C}**\nJoined server at: **{CC}**\nPlaying: **{O}**";
+
+				await ReplyAsync("", false, embed.Build());
+				await BotCooldown.Cooldown();
+			}
+			else
 			{
-				Color = new Color(29, 140, 209),
-				Author = auth
-			};
-
-			var us = user as SocketGuildUser;
-
-			var D = us.Username;
-
-			var A = us.Discriminator;
-			var T = us.Id;
-			var S = date;
-			var C = us.Status;
-			var CC = us.JoinedAt;
-			var O = us.Game;
-			embed.Title = $"**{us.Username}** Information";
-			embed.Description = $"Username: **{D}**\nDiscriminator: **{A}**\nUser ID: **{T}**\nCreated at: **{S}**\nCurrent Status: **{C}**\nJoined server at: **{CC}**\nPlaying: **{O}**";
-
-			await ReplyAsync("", false, embed.Build());
+				await ReplyAsync(BotCooldown.cooldownMsg);
+			}
 		}
 
 		/// <summary>
 		/// Returns info about a discord server
 		/// </summary>
+		/// <param name="gld">The GLD.</param>
 		/// <returns></returns>
-		[Command("serverinfo")]
+		[Command("serverinfo", RunMode = RunMode.Async)]
 		[Alias("sinfo", "serv")]
 		[Remarks("Info about a server this bot is in")]
 		public async Task GuildInfo()
 		{
-			EmbedBuilder embedBuilder;
-			embedBuilder = new EmbedBuilder();
-			embedBuilder.WithColor(new Color(0, 71, 171));
+			if (BotCooldown.isCooldownRunning == false)
+			{
+				EmbedBuilder embedBuilder;
+				embedBuilder = new EmbedBuilder();
+				embedBuilder.WithColor(new Color(0, 71, 171));
 
-			var gld = Context.Guild as SocketGuild;
-			var cli = Context.Client as DiscordSocketClient;
+				var gld2 = Context.Guild as SocketGuild;
+				var cli = Context.Client as DiscordSocketClient;
 
-			if (!string.IsNullOrWhiteSpace(gld.IconUrl))
-				embedBuilder.ThumbnailUrl = gld.IconUrl;
+				if (!string.IsNullOrWhiteSpace(gld2.IconUrl))
+					embedBuilder.ThumbnailUrl = gld2.IconUrl;
 
-			var O = gld.Owner.Username;
-			var V = gld.VoiceRegionId;
-			var C = gld.CreatedAt;
-			var N = gld.DefaultMessageNotifications;
-			var R = gld.Roles;
-			var VL = gld.VerificationLevel;
-			var XD = gld.Roles.Count;
-			var X = gld.MemberCount;
-			var Z = cli.ConnectionState;
+				var O = gld2.Owner.Username;
+				var V = gld2.VoiceRegionId;
+				var C = gld2.CreatedAt;
+				var N = gld2.DefaultMessageNotifications;
+				var R = gld2.Roles;
+				var VL = gld2.VerificationLevel;
+				var XD = gld2.Roles.Count;
+				var X = gld2.MemberCount;
+				var Z = cli.ConnectionState;
 
-			embedBuilder.Title = $"{gld.Name} Server Information";
-			embedBuilder.Description = $"Server Owner: **{O}\n**Voice Region: **{V}\n**Created at: **{C}\n**MsgNtfc: **{N}\n**Verification: **{VL}\n**Role Count: **{XD}\n**Members: **{X}\n**Connection state: **{Z}\n\n**";
-			await ReplyAsync("", false, embedBuilder);
+				embedBuilder.Title = $"{gld2.Name} Server Information";
+				embedBuilder.Description =
+					$"Server Owner: **{O}\n**" +
+					$"Voice Region: **{V}\n**" +
+					$"Created at: **{C}\n**" +
+					$"MsgNtfc: **{N}\n**" +
+					$"Verification: **{VL}\n**" +
+					$"Role Count: **{XD}\n**" +
+					$"Members: **{X}\n**" +
+					$"Connection state: **{Z}\n\n**";
+				await ReplyAsync("", false, embedBuilder);
+				await BotCooldown.Cooldown();
+			}
+			else
+			{
+				await ReplyAsync(BotCooldown.cooldownMsg);
+			}
 		}
 
 		/// <summary>
@@ -404,48 +482,66 @@ namespace RicaBotpaw.Modules.Public
 		/// </summary>
 		/// <param name="dm">The dm.</param>
 		/// <returns></returns>
-		[Command("ownerDM")]
+		[Command("ownerDM", RunMode = RunMode.Async)]
 		[Remarks("Sends a DM to the owner. Useful for bug reports")]
 		public async Task dm([Remainder] string dm)
 		{
-			var myId = Context.User.Mention;
-			if (me == null)
+			if (BotCooldown.isCooldownRunning == false)
 			{
-				foreach (var user in Context.Guild.GetUsersAsync().Result)
+				var myId = Context.User.Mention;
+				if (me == null)
 				{
-					if (user.Id == 112559794543468544)
+					foreach (var user in Context.Guild.GetUsersAsync().Result)
 					{
-						me = user;
-						myId = user.Mention;
-						break;
+						if (user.Id == 112559794543468544)
+						{
+							me = user;
+							myId = user.Mention;
+							break;
+						}
 					}
 				}
+
+				var application = await Context.Client.GetApplicationInfoAsync();
+				var message = await application.Owner.GetOrCreateDMChannelAsync();
+				var embed = new EmbedBuilder()
+				{
+					Color = new Color(0, 0, 255)
+				};
+
+				embed.Description = $"{dm}";
+				embed.WithFooter(
+					new EmbedFooterBuilder().WithText($"Message from: {Context.User.Username} | Guild: {Context.Guild.Name}"));
+
+				await message.SendMessageAsync("", false, embed);
+				embed.Description = $"You have sent a message to {me}. He will read the message soon.";
+				await Context.Channel.SendMessageAsync("", false, embed);
+				await BotCooldown.Cooldown();
 			}
-
-			var application = await Context.Client.GetApplicationInfoAsync();
-			var message = await application.Owner.GetOrCreateDMChannelAsync();
-			var embed = new EmbedBuilder()
+			else
 			{
-				Color = new Color(0, 0, 255)
-			};
-
-			embed.Description = $"{dm}";
-			embed.WithFooter(new EmbedFooterBuilder().WithText($"Message from: {Context.User.Username} | Guild: {Context.Guild.Name}"));
-
-			await message.SendMessageAsync("", false, embed);
-			embed.Description = $"You have sent a message to {me}. He will read the message soon.";
-			await Context.Channel.SendMessageAsync("", false, embed);
+				await ReplyAsync(BotCooldown.cooldownMsg);
+			}
 		}
 
 		/// <summary>
 		/// Prints the bots changelog inside the chat
 		/// </summary>
 		/// <returns></returns>
-		[Command("changelog")]
+		[Command("changelog", RunMode = RunMode.Async)]
 		[Remarks("Returns Ricas Changelog which includes her version")]
 		public async Task Changelog()
 		{
-			await ReplyAsync(System.IO.File.ReadAllText(@"changelog.txt"));
+			if (BotCooldown.isCooldownRunning == false)
+			{
+				await ReplyAsync(
+				System.IO.File.ReadAllText(@"changelog.txt"));
+				await BotCooldown.Cooldown();
+			}
+			else
+			{
+				await ReplyAsync(BotCooldown.cooldownMsg);
+			}
 		}
 
 
@@ -455,58 +551,77 @@ namespace RicaBotpaw.Modules.Public
 		/// Returns data stored into the database
 		/// </summary>
 		/// <param name="user">The user.</param>
+	
 		/// <returns></returns>
-		[Command("status")]
+		[Command("status", RunMode = RunMode.Async)]
 		[Alias("s")]
 		[Remarks("Retrieves data about a user from the Database")]
 		public async Task dbSay([Remainder] IUser user = null)
 		{
-			var embed = new EmbedBuilder()
-			{
-				Color = new Color(0, 0, 255)
-			};
 
-			if (user == null)
+			if (BotCooldown.isCooldownRunning == false)
 			{
-				user = Context.User;
+				var embed = new EmbedBuilder()
+				{
+					Color = new Color(0, 0, 255)
+				};
+
+				if (user == null)
+				{
+					user = Context.User;
+				}
+
+				var result = Database.CheckExistingUser(user);
+
+				if (result.Count() <= 0)
+				{
+					Database.EnterUser(user);
+				}
+
+				var tableName = Database.GetUserStatus(user);
+				embed.Description = (Context.User.Mention + "\n\n" + user.Username + "'s current status is as followed: \n"
+									 + ":small_blue_diamond:" + "UserID: " + tableName.FirstOrDefault().UserId + "\n"
+									 + ":small_blue_diamond:" + tableName.FirstOrDefault().Tokens + " tokens!\n"
+									 + ":small_blue_diamond:" + "Current custom rank: " + tableName.FirstOrDefault().Rank + "\n"
+									 + ":small_blue_diamond:" + "Level: " + tableName.FirstOrDefault().Level + "\n"
+									 + ":small_blue_diamond:" + "XP: " + tableName.FirstOrDefault().XP + "\n");
+
+				await Context.Channel.SendMessageAsync("", false, embed);
+				await BotCooldown.Cooldown();
 			}
-
-			var result = Database.CheckExistingUser(user);
-
-			if (result.Count() <= 0)
+			else
 			{
-				Database.EnterUser(user);
+				await ReplyAsync(BotCooldown.cooldownMsg);
 			}
-
-			var tableName = Database.GetUserStatus(user);
-			embed.Description = (Context.User.Mention + "\n\n" + user.Username + "'s current status is as followed: \n"
-				+ ":small_blue_diamond:" + "UserID: " + tableName.FirstOrDefault().UserId + "\n"
-				+ ":small_blue_diamond:" + tableName.FirstOrDefault().Tokens + " tokens!\n"
-				+ ":small_blue_diamond:" + "Current custom rank: " + tableName.FirstOrDefault().Rank + "\n"
-				+ ":small_blue_diamond:" + "Level: " + tableName.FirstOrDefault().Level + "\n"
-				+ ":small_blue_diamond:" + "XP: " + tableName.FirstOrDefault().XP + "\n"
-				+ ":small_blue_diamond:" + "GUID: " + tableName.FirstOrDefault().GUID + "\n");
-
-			await Context.Channel.SendMessageAsync("", false, embed);
 		}
+			
 
 		/// <summary>
 		/// Registers you inside the Database
 		/// </summary>
 		/// <param name="user">The user.</param>
 		/// <returns></returns>
-		[Command("enterDb")]
+		[Command("enterDb", RunMode = RunMode.Async)]
 		[Remarks("Enters you into Ricas Database")]
 		public async Task dbEnter([Remainder] IUser user = null)
 		{
-			if (user == null)
+			if (BotCooldown.isCooldownRunning == false)
 			{
-				user = Context.User;
+				if (user == null)
+				{
+					user = Context.User;
+					Database.EnterUser(user);
+					await ReplyAsync("You should be entered now. If not, then hell...");
+					await BotCooldown.Cooldown();
+				}
 			}
-
-			var enterDb = Database.EnterUser(user);
-			await ReplyAsync("You should be entered now. If not, then hell...");
+			else
+			{
+				await ReplyAsync(BotCooldown.cooldownMsg);
+			}
 		}
+				
+
 
 		// Database Awards, UwU
 
@@ -516,18 +631,28 @@ namespace RicaBotpaw.Modules.Public
 		/// <param name="user">The user.</param>
 		/// <param name="tokens">The tokens.</param>
 		/// <returns></returns>
-		[Command("award")]
+		[Command("award", RunMode = RunMode.Async)]
 		[Remarks("Award someone with some tokens, Woo!")]
 		public async Task Award(SocketGuildUser user, [Remainder] uint tokens)
 		{
-			if (tokens > 50)
+			if (BotCooldown.isCooldownRunning == false)
 			{
-				await ReplyAsync(Context.User.Mention + ", Woah there. The amount you entered was too high to handle.\nKeep it at least below or equal to 50!");
+				if (tokens > 50)
+				{
+					await ReplyAsync(Context.User.Mention +
+									 ", Woah there. The amount you entered was too high to handle.\nKeep it at least below or equal to 50!");
+					await BotCooldown.Cooldown();
+				}
+				else
+				{
+					Database.ChangeTokens(user, tokens);
+					await ReplyAsync(user.Mention + ", you were awarded with " + tokens + " tokens!");
+					await BotCooldown.Cooldown();
+				}
 			}
 			else
 			{
-				Database.ChangeTokens(user, tokens);
-				await ReplyAsync(user.Mention + ", you were awarded with " + tokens + " tokens!");
+				await ReplyAsync(BotCooldown.cooldownMsg);
 			}
 		}
 
@@ -535,56 +660,74 @@ namespace RicaBotpaw.Modules.Public
 		/// Random cat!
 		/// </summary>
 		/// <returns></returns>
-		[Command("cat")]
+		[Command("cat", RunMode = RunMode.Async)]
 		[Remarks("Sends you a random cat.")]
 		public async Task Cat()
 		{
-			Console.WriteLine("Making API Call...");
-			using (var client = new HttpClient(new HttpClientHandler
+			if (BotCooldown.isCooldownRunning == false)
 			{
-				AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-			}))
+				Console.WriteLine("Making API Call...");
+				using (var client = new HttpClient(new HttpClientHandler
+				{
+					AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+				}))
+				{
+					string websiteUrl = "http://random.cat/meow";
+					client.BaseAddress = new Uri(websiteUrl);
+
+					HttpResponseMessage res = client.GetAsync("").Result;
+					res.EnsureSuccessStatusCode();
+
+					string result = await res.Content.ReadAsStringAsync();
+					var json = JObject.Parse(result);
+
+					string CatImage = json["file"].ToString();
+
+					await ReplyAsync(CatImage);
+					await BotCooldown.Cooldown();
+				}
+			}
+			else
 			{
-				string websiteUrl = "http://random.cat/meow";
-				client.BaseAddress = new Uri(websiteUrl);
-
-				HttpResponseMessage res = client.GetAsync("").Result;
-				res.EnsureSuccessStatusCode();
-
-				string result = await res.Content.ReadAsStringAsync();
-				var json = JObject.Parse(result);
-
-				string CatImage = json["file"].ToString();
-
-				await ReplyAsync(CatImage);
+				await ReplyAsync(BotCooldown.cooldownMsg);
 			}
 		}
 
 		/// <summary>
-		/// Urbans the dictionary.
+		/// Gets the best urban definition based on the term the user has given.
 		/// </summary>
 		/// <param name="term">The term.</param>
 		/// <returns></returns>
-		[Command("ud")]
+		[Command("ud", RunMode = RunMode.Async)]
 		[Remarks("Returns an Urban Dictionary defintion")]
-		public async Task Urban(string term)
+		public async Task Urban([Remainder] string term = null)
 		{
-			UrbanService client = new UrbanService();
-			var data = await client.Data($"{term}");
-			var tUp = data.List[0].ThumbsUp;
-			var tDown = data.List[0].ThumbsDown;
-			var def = data.List[0].Definition;
-			var ex = data.List[0].Example;
-
-			var embed = new EmbedBuilder()
+			if (BotCooldown.isCooldownRunning == false)
 			{
-				Color = new Color(60, 133, 150)
-			};
+				UrbanService client = new UrbanService();
+				var data = await client.Data($"{term}");
+				var tUp = data.List[0].ThumbsUp;
+				var tDown = data.List[0].ThumbsDown;
+				var def = data.List[0].Definition;
+				var ex = data.List[0].Example;
 
-			embed.Title = $"Urban Definiton for {term}";
-			embed.Description = ($"{def}\n------------\nExample:\n{ex}\n-----------\nThis Urban Defintion has received {tUp} :thumbsup: and {tDown} :thumbsdown:");
+				var embed = new EmbedBuilder()
+				{
+					Color = new Color(60, 133, 150)
+				};
 
-			await ReplyAsync("", false, embed: embed);
+				embed.Title = $"Urban Definiton for {term}";
+				embed.Description =
+				($"{def}\n------------\nExample:\n{ex}\n-----------\nThis Urban Defintion has received {tUp} :thumbsup: and {tDown} :thumbsdown:"
+				);
+
+				await ReplyAsync("", false, embed: embed);
+				await BotCooldown.Cooldown();
+			}
+			else
+			{
+				await ReplyAsync(BotCooldown.cooldownMsg);
+			}
 		}
 
 
@@ -592,11 +735,20 @@ namespace RicaBotpaw.Modules.Public
 		/// If someone actually is going to donate.
 		/// </summary>
 		/// <returns></returns>
-		[Command("donate")]
+		[Command("donate", RunMode = RunMode.Async)]
 		[Remarks("If you want to show your support, then do it with this!")]
 		public async Task Donate()
 		{
-			await ReplyAsync("If you want to show your support to EnK_ for making me, you can do it over paypal!\nAny amount is accepted (Except an amount of 0) and will greatly help him in keeping this project running!\nYou can donate to him here: https://www.paypal.me/zi8tx");
+			if (BotCooldown.isCooldownRunning == false)
+			{
+				await ReplyAsync(
+			"If you want to show your support to EnK_ for making me, you can do it over paypal!\nAny amount is accepted (Except an amount of 0) and will greatly help him in keeping this project running!\nYou can donate to him here: https://www.paypal.me/zi8tx");
+				await BotCooldown.Cooldown();
+			}
+			else
+			{
+				await ReplyAsync(BotCooldown.cooldownMsg);
+			}
 		}
 
 		/// <summary>
@@ -609,7 +761,7 @@ namespace RicaBotpaw.Modules.Public
 			/// <summary>
 			/// This is the string which helps us checking if a poll is currently running. If it says yes, then there can't be another poll made until it says no again
 			/// </summary>
-			static string _isAPollRunning = "no";
+			private static string _isAPollRunning = "no";
 
 			/// <summary>
 			/// Security-Measure for preventing that other users end your poll
@@ -620,61 +772,73 @@ namespace RicaBotpaw.Modules.Public
 			/// Starts the poll.
 			/// </summary>
 			/// <param name="question">The question.</param>
+			/// <param name="user">The user.</param>
 			/// <returns></returns>
-			[Command("start")]
+			[Command("start", RunMode = RunMode.Async)]
 			[Remarks("Starts a poll")]
-			public async Task StartPoll(string question, [Remainder]IUser user = null)
+			public async Task StartPoll(string question, [Remainder] IUser user)
 			{
-				if (_isAPollRunning.Equals("yes"))
-				{
-					await ReplyAsync("You cannot start a poll at the moment! Please wait until the current poll is over");
-				}
 
-				if (user == null)
+				if (BotCooldown.isCooldownRunning == false)
 				{
-					user = Context.User;
-					_isAPollRunning = "yes";
-					_userMadePoll = user.Username;
-
-					var embed = new EmbedBuilder()
+					if (_isAPollRunning.Equals("yes"))
 					{
-						Color = new Color(56, 193, 25)
-					};
+						await ReplyAsync("You cannot start a poll at the moment! Please wait until the current poll is over");
+						await BotCooldown.Cooldown();
+					}
 
-					Database.EnterPoll(question, user);
+					if (user == null)
+					{
+						user = Context.User;
+						_isAPollRunning = "yes";
+						_userMadePoll = user.Username;
 
-					embed.Title = $"{Context.User.Username} has started a poll!";
+						var embed = new EmbedBuilder()
+						{
+							Color = new Color(56, 193, 25)
+						};
 
-					var tableName = Database.GetPoll();
+						Database.EnterPoll(question, user);
 
-					embed.Description = ($"{Context.User.Username} has started a poll" + "\n\n" +
-										 ":arrow_right: Question: " + tableName.FirstOrDefault().Question + "\n" +
-										 ":arrow_right: Votes for yes: " + tableName.FirstOrDefault().YesVotes + "\n" +
-										 ":arrow_right: Votes for no: " + tableName.FirstOrDefault().NoVotes);
+						embed.Title = $"{Context.User.Username} has started a poll!";
 
-					await Context.Channel.SendMessageAsync("", false, embed);
+						var tableName = Database.GetPoll();
+
+						embed.Description = ($"{Context.User.Username} has started a poll" + "\n\n" +
+											 ":arrow_right: Question: " + tableName.FirstOrDefault().Question + "\n" +
+											 ":arrow_right: Votes for yes: " + tableName.FirstOrDefault().YesVotes + "\n" +
+											 ":arrow_right: Votes for no: " + tableName.FirstOrDefault().NoVotes);
+
+						await Context.Channel.SendMessageAsync("", false, embed);
+						await BotCooldown.Cooldown();
+					}
+					else // If there was a user mentioned
+					{
+						_isAPollRunning = "yes";
+
+						var embed = new EmbedBuilder()
+						{
+							Color = new Color(56, 193, 25)
+						};
+
+						Database.EnterPoll(question, user);
+
+						embed.Title = $"{Context.User.Username} has started a poll!";
+
+						var tableName = Database.GetPoll();
+
+						embed.Description = ($"{Context.User.Username} has started a poll" + "\n\n" +
+											 ":arrow_right: Question: " + tableName.FirstOrDefault().Question + "\n" +
+											 ":arrow_right: Votes for yes: " + tableName.FirstOrDefault().YesVotes + "\n" +
+											 ":arrow_right: Votes for no: " + tableName.FirstOrDefault().NoVotes);
+
+						await Context.Channel.SendMessageAsync("", false, embed);
+						await BotCooldown.Cooldown();
+					}
 				}
 				else
 				{
-					_isAPollRunning = "yes";
-
-					var embed = new EmbedBuilder()
-					{
-						Color = new Color(56, 193, 25)
-					};
-
-					Database.EnterPoll(question, user);
-
-					embed.Title = $"{Context.User.Username} has started a poll!";
-
-					var tableName = Database.GetPoll();
-
-					embed.Description = ($"{Context.User.Username} has started a poll" + "\n\n" +
-										 ":arrow_right: Question: " + tableName.FirstOrDefault().Question + "\n" +
-										 ":arrow_right: Votes for yes: " + tableName.FirstOrDefault().YesVotes + "\n" +
-										 ":arrow_right: Votes for no: " + tableName.FirstOrDefault().NoVotes);
-
-					await Context.Channel.SendMessageAsync("", false, embed);
+					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 
@@ -685,138 +849,168 @@ namespace RicaBotpaw.Modules.Public
 			/// <param name="decision">The decision.</param>
 			/// <param name="user">The user.</param>
 			/// <returns></returns>
-			[Command("vote")]
+			[Command("vote", RunMode = RunMode.Async)]
 			[Remarks("Leave your vote here!")]
-			public async Task Vote(string decision, [Remainder]IUser user = null)
+			public async Task Vote(string decision, [Remainder] IUser user)
 			{
-				if (_isAPollRunning.Equals("no"))
+				if (BotCooldown.isCooldownRunning == false)
 				{
-					await ReplyAsync("You cannot vote on a poll which is not running!");
-				}
+					if (_isAPollRunning.Equals("no"))
+					{
+						await ReplyAsync("You cannot vote on a poll which is not running!");
+						await BotCooldown.Cooldown();
+					}
 
-				if (user == null)
-				{
-					user = Context.User;
-					if (decision.Equals("yes"))
+					if (user == null)
 					{
-						Database.CheckExistingVoteByUser(user);
-						Database.AddYesToPoll();
-						Database.EnterUserVote(user, 1);
-						await ReplyAsync("You successfully voted for yes on the current poll!");
+						user = Context.User;
+						if (decision.Equals("yes") || decision.Equals("Yes") || decision.Equals("YES"))
+						{
+							Database.CheckExistingVoteByUser(user);
+							Database.AddYesToPoll();
+							Database.EnterUserVote(user, 1);
+							await ReplyAsync("You successfully voted for yes on the current poll!");
+							await BotCooldown.Cooldown();
+						}
+						else if (decision.Equals("no") || decision.Equals("No") || decision.Equals("NO"))
+						{
+							Database.CheckExistingVoteByUser(user);
+							Database.AddNoToPoll();
+							Database.EnterUserVote(user, 0);
+							await ReplyAsync("You successfully voted for no on the current poll!");
+							await BotCooldown.Cooldown();
+						}
+						else
+						{
+							await ReplyAsync("Invalid answer!");
+							await BotCooldown.Cooldown();
+						}
 					}
-					else if (decision.Equals("no"))
+					else // If there was a user mentioned
 					{
-						Database.CheckExistingVoteByUser(user);
-						Database.AddNoToPoll();
-						Database.EnterUserVote(user, 0);
-						await ReplyAsync("You successfully voted for no on the current poll!");
-					}
-					else
-					{
-						await ReplyAsync("Invalid answer!");
+						if (decision.Equals("yes") || decision.Equals("Yes") || decision.Equals("YES"))
+						{
+							Database.CheckExistingVoteByUser(user);
+							Database.AddYesToPoll();
+							Database.EnterUserVote(user, 1);
+							await ReplyAsync("You successfully voted for yes on the current poll!");
+							await BotCooldown.Cooldown();
+						}
+						else if (decision.Equals("no") || decision.Equals("No") || decision.Equals("NO"))
+						{
+							Database.CheckExistingVoteByUser(user);
+							Database.AddNoToPoll();
+							Database.EnterUserVote(user, 0);
+							await ReplyAsync("You successfully voted for no on the current poll!");
+							await BotCooldown.Cooldown();
+						}
+						else
+						{
+							await ReplyAsync("Invalid answer!");
+							await BotCooldown.Cooldown();
+						}
 					}
 				}
 				else
 				{
-					if (decision.Equals("yes") || decision.Equals("Yes") || decision.Equals("YES"))
-					{
-						Database.CheckExistingVoteByUser(user);
-						Database.AddYesToPoll();
-						Database.EnterUserVote(user, 1);
-						await ReplyAsync("You successfully voted for yes on the current poll!");
-					}
-					else if (decision.Equals("no") || decision.Equals("No") || decision.Equals("NO"))
-					{
-						Database.CheckExistingVoteByUser(user);
-						Database.AddNoToPoll();
-						Database.EnterUserVote(user, 0);
-						await ReplyAsync("You successfully voted for no on the current poll!");
-					}
-					else
-					{
-						await ReplyAsync("Invalid answer!");
-					}
+					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 
 			/// <summary>
 			/// Ends the poll.
 			/// </summary>
-			[Command("end")]
+			/// <param name="user">The user</param>
+			/// <returns></returns>
+			[Command("end", RunMode = RunMode.Async)]
 			[Remarks("Ends your poll")]
-			public async Task EndPoll([Remainder]IUser user = null)
+			public async Task EndPoll([Remainder] IUser user)
 			{
-				if (_isAPollRunning.Equals("no"))
+				if (BotCooldown.isCooldownRunning == false)
 				{
-					await ReplyAsync("You cannot end a poll if there is nothing to end!");
-				}
-
-				if (user == null)
-				{
-					user = Context.User;
-					if (_userMadePoll != user.Username)
+					if (_isAPollRunning.Equals("no"))
 					{
-						await ReplyAsync("You cannot end a poll which wasn't opened by you!");
+						await ReplyAsync("You cannot end a poll if there is nothing to end!");
+						await BotCooldown.Cooldown();
 					}
-					else
+
+					if (user == null)
 					{
-						var embed = new EmbedBuilder()
+						user = Context.User;
+						if (_userMadePoll != user.Username)
 						{
-							Color = new Color(56, 193, 25)
-						};
+							await ReplyAsync("You cannot end a poll which wasn't opened by you!");
+							await BotCooldown.Cooldown();
+						}
+						else
+						{
+							var embed = new EmbedBuilder()
+							{
+								Color = new Color(56, 193, 25)
+							};
 
-						embed.Title = $"{Context.User.Username} has ended their poll!";
+							embed.Title = $"{Context.User.Username} has ended their poll!";
 
-						var tableName = Database.GetPoll();
+							var tableName = Database.GetPoll();
 
-						embed.Description = ($"{Context.User.Username} has ended their poll" + "\n\n" +
-							"Here is the result:" + "\n" +
-							$":arrow_right: Question: {tableName.FirstOrDefault().Question}" + "\n" +
-							$":arrow_right: Votes for yes: {tableName.FirstOrDefault().YesVotes}" + "\n" +
-							$":arrow_right: Votes for no: {tableName.FirstOrDefault().NoVotes}");
+							embed.Description = ($"{Context.User.Username} has ended their poll" + "\n\n" +
+												 "Here is the result:" + "\n" +
+												 $":arrow_right: Question: {tableName.FirstOrDefault().Question}" + "\n" +
+												 $":arrow_right: Votes for yes: {tableName.FirstOrDefault().YesVotes}" + "\n" +
+												 $":arrow_right: Votes for no: {tableName.FirstOrDefault().NoVotes}");
 
-						await Context.Channel.SendMessageAsync("", false, embed);
+							await Context.Channel.SendMessageAsync("", false, embed);
 
-						_isAPollRunning = "no";
+							_isAPollRunning = "no";
 
-						Database.DeletePoll();
-						Database.DeleteUserInVotePool();
+							Database.DeletePoll();
+							Database.DeleteUserInVotePool();
 
-						_userMadePoll = "";
+							_userMadePoll = "";
+
+							await BotCooldown.Cooldown();
+						}
+					}
+					else // If there was an user mentioned
+					{
+						if (_userMadePoll != user.Username)
+						{
+							await ReplyAsync("You cannot end a poll which wasn't opened by you!");
+							await BotCooldown.Cooldown();
+						}
+						else
+						{
+							var embed = new EmbedBuilder()
+							{
+								Color = new Color(56, 193, 25)
+							};
+
+							embed.Title = $"{Context.User.Username} has ended their poll!";
+
+							var tableName = Database.GetPoll();
+
+							embed.Description = ($"{Context.User.Username} has ended their poll" + "\n\n" +
+												 "Here is the result:" + "\n" +
+												 $":arrow_right: Question: {tableName.FirstOrDefault().Question}" + "\n" +
+												 $":arrow_right: Votes for yes: {tableName.FirstOrDefault().YesVotes}" + "\n" +
+												 $":arrow_right: Votes for no: {tableName.FirstOrDefault().NoVotes}");
+
+							await Context.Channel.SendMessageAsync("", false, embed);
+
+							_isAPollRunning = "no";
+
+							Database.DeletePoll();
+							Database.DeleteUserInVotePool();
+
+							_userMadePoll = "";
+
+							await BotCooldown.Cooldown();
+						}
 					}
 				}
 				else
 				{
-					if (_userMadePoll != user.Username)
-					{
-						await ReplyAsync("You cannot end a poll which wasn't opened by you!");
-					}
-					else
-					{
-						var embed = new EmbedBuilder()
-						{
-							Color = new Color(56, 193, 25)
-						};
-
-						embed.Title = $"{Context.User.Username} has ended their poll!";
-
-						var tableName = Database.GetPoll();
-
-						embed.Description = ($"{Context.User.Username} has ended their poll" + "\n\n" +
-							"Here is the result:" + "\n" +
-							$":arrow_right: Question: {tableName.FirstOrDefault().Question}" + "\n" +
-							$":arrow_right: Votes for yes: {tableName.FirstOrDefault().YesVotes}" + "\n" +
-							$":arrow_right: Votes for no: {tableName.FirstOrDefault().NoVotes}");
-
-						await Context.Channel.SendMessageAsync("", false, embed);
-
-						_isAPollRunning = "no";
-
-						Database.DeletePoll();
-						Database.DeleteUserInVotePool();
-
-						_userMadePoll = "";
-					}
+					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 		}
@@ -835,28 +1029,36 @@ namespace RicaBotpaw.Modules.Public
 			/// First you gotta open a bank account before you get any money.
 			/// </summary>
 			/// <returns></returns>
-			[Command("openbank")]
+			[Command("openbank", RunMode = RunMode.Async)]
 			[Remarks("Opens your bank account! Woah!")]
 			public async Task bankC()
 			{
-				var application = await Context.Client.GetApplicationInfoAsync();
-				var auth = new EmbedAuthorBuilder();
-
-				var result = Database.CheckMoneyExistingUser(Context.User);
-				if (result.Count() <= 0)
+				if (BotCooldown.isCooldownRunning == false)
 				{
-					Database.cBank(Context.User);
+					var application = await Context.Client.GetApplicationInfoAsync();
+					var auth = new EmbedAuthorBuilder();
 
-					var embed = new EmbedBuilder()
+					var result = Database.CheckMoneyExistingUser(Context.User);
+					if (result.Count() <= 0)
 					{
-						Color = new Color(29, 140, 209),
-						Author = auth
-					};
+						Database.cBank(Context.User);
 
-					embed.Title = $"{Context.User.Username} has opened a bank-account!";
-					embed.Description = $"\n:dollar: **Welcome to the bank!** :\n\n**Bank : Unknown**\n";
+						var embed = new EmbedBuilder()
+						{
+							Color = new Color(29, 140, 209),
+							Author = auth
+						};
 
-					await ReplyAsync("", false, embed.Build());
+						embed.Title = $"{Context.User.Username} has opened a bank-account!";
+						embed.Description = $"\n:dollar: **Welcome to the bank!** :\n\n**Bank: Rica Bank**\n";
+
+						await ReplyAsync("", false, embed.Build());
+						await BotCooldown.Cooldown();
+					}
+				}
+				else
+				{
+					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 
@@ -864,25 +1066,33 @@ namespace RicaBotpaw.Modules.Public
 			/// Returns your balance
 			/// </summary>
 			/// <returns></returns>
-			[Command("balance")]
+			[Command("balance", RunMode = RunMode.Async)]
 			[Remarks("Returns your current balance")]
 			public async Task MoneyOl()
 			{
-				var application = await Context.Client.GetApplicationInfoAsync();
-				var auth = new EmbedAuthorBuilder();
-
-				var moneydiscord = Database.GetUserMoney(Context.User);
-
-				var embed = new EmbedBuilder()
+				if (BotCooldown.isCooldownRunning == false)
 				{
-					Color = new Color(29, 140, 209),
-					Author = auth
-				};
+					var application = await Context.Client.GetApplicationInfoAsync();
+					var auth = new EmbedAuthorBuilder();
 
-				embed.Title = $"{Context.User.Username}'s Balance";
-				embed.Description = $"\n:dollar: **Balance**:\n\n**{moneydiscord.FirstOrDefault().Money}**\n";
+					var moneydiscord = Database.GetUserMoney(Context.User);
 
-				await ReplyAsync("", false, embed.Build());
+					var embed = new EmbedBuilder()
+					{
+						Color = new Color(29, 140, 209),
+						Author = auth
+					};
+
+					embed.Title = $"{Context.User.Username}'s Balance";
+					embed.Description = $"\n:dollar: **Balance**:\n\n**{moneydiscord.FirstOrDefault().Money}**\n";
+
+					await ReplyAsync("", false, embed.Build());
+					await BotCooldown.Cooldown();
+				}
+				else
+				{
+					await ReplyAsync(BotCooldown.cooldownMsg);
+				}
 			}
 
 			/// <summary>
@@ -891,19 +1101,27 @@ namespace RicaBotpaw.Modules.Public
 			/// <param name="user">The user.</param>
 			/// <param name="money">The money.</param>
 			/// <returns></returns>
-			[Command("givemoney")]
+			[Command("givemoney", RunMode = RunMode.Async)]
 			[Remarks("Adds money to a user.")]
 			public async Task AddMoney(SocketGuildUser user, [Remainder] int money)
 			{
-				if (Context.User.Id == 112559794543468544)
+				if (BotCooldown.isCooldownRunning == false)
 				{
-					Database.UpdateMoney(user, money);
-					await ReplyAsync($"Gave {money} to {user.Username}!");
+					if (Context.User.Id == 112559794543468544)
+					{
+						Database.UpdateMoney(user, money);
+						await ReplyAsync($"Gave {money} to {user.Username}!");
+						await BotCooldown.Cooldown();
+					}
+					else
+					{
+						await ReplyAsync("Only my master can add money to others...");
+						await BotCooldown.Cooldown();
+					}
 				}
 				else
 				{
-					await ReplyAsync("Only my master can add money to others...");
-					return;
+					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 
@@ -913,36 +1131,49 @@ namespace RicaBotpaw.Modules.Public
 			/// <param name="user">The user.</param>
 			/// <param name="moneyToStore">The money to store.</param>
 			/// <returns></returns>
-			[Command("store")]
+			[Command("store", RunMode = RunMode.Async)]
 			[Remarks("Part of the payment process.")]
-			public async Task StoreMoney(IUser user, int moneyToStore)
+			public async Task StoreMoney(int moneyToStore, [Remainder] IUser user = null)
 			{
-				var _user = Database.CheckMoneyExistingUser(user);
-				var embedAuthor = new EmbedAuthorBuilder();
-
-				if (user == null)
+				if (BotCooldown.isCooldownRunning == false)
 				{
-					user = Context.User;
-				}
+					if (user == null)
+					{
+						user = Context.User;
 
-				if (_user.Count <= 0)
-				{
-					Database.cBank(user);
+						var _user = Database.CheckMoneyExistingUser(user);
+						var embedAuthor = new EmbedAuthorBuilder();
+
+						if (user == null)
+						{
+							user = Context.User;
+						}
+
+						if (_user.Count <= 0)
+						{
+							Database.cBank(user);
+						}
+						else
+						{
+							Database.StoreMoney(user, moneyToStore);
+
+							var embed = new EmbedBuilder()
+							{
+								Color = new Color(0, 0, 255),
+								Author = embedAuthor
+							};
+
+							embed.Title = $"{user} has stored {moneyToStore} Dollars into their vault";
+							embed.Description = "You may now send the amount of money you stored away to the user you want to pay.";
+
+							await ReplyAsync("", false, embed: embed);
+							await BotCooldown.Cooldown();
+						}
+					}
 				}
 				else
 				{
-					Database.StoreMoney(user, moneyToStore);
-
-					var embed = new EmbedBuilder()
-					{
-						Color = new Color(0, 0, 255),
-						Author = embedAuthor
-					};
-
-					embed.Title = $"{user} has stored {moneyToStore} Dollars into their vault";
-					embed.Description = "You may now send the amount of money you stored away to the user you want to pay.";
-
-					await ReplyAsync("", false, embed: embed);
+					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 
@@ -953,22 +1184,34 @@ namespace RicaBotpaw.Modules.Public
 			/// <param name="recieveUser">The recieve user.</param>
 			/// <param name="money">The money.</param>
 			/// <returns></returns>
-			[Command("pay")]
+			[Command("pay", RunMode = RunMode.Async)]
 			[Remarks("Pays the user with stored money")]
-			public async Task PayMoney(IUser payUser, IUser recieveUser, int money)
+			public async Task PayMoney(IUser recieveUser, int money, [Remainder] IUser payUser = null)
 			{
-				var moneyDiscord = Database.GetUserMoney(Context.User);
-				var _pUser = payUser;
-
-				if (moneyDiscord.FirstOrDefault().StoreMoney < money)
+				if (BotCooldown.isCooldownRunning == false)
 				{
-					await ReplyAsync("You can't pay more than you have stored away, my friend");
+					if (payUser == null)
+					{
+						payUser = Context.User;
+						var moneyDiscord = Database.GetUserMoney(Context.User);
+
+						if (moneyDiscord.FirstOrDefault().StoreMoney < money)
+						{
+							await ReplyAsync("You can't pay more than you have stored away, my friend");
+							await BotCooldown.Cooldown();
+						}
+						else
+						{
+							Database.PayMoney1(payUser, money);
+							Database.PayMoney2(recieveUser, money);
+							await ReplyAsync($"Successfully paid {recieveUser} {money} Dollars!");
+							await BotCooldown.Cooldown();
+						}
+					}
 				}
 				else
 				{
-					Database.PayMoney1(payUser, money);
-					Database.PayMoney2(recieveUser, money);
-					await ReplyAsync($"Successfully paid {recieveUser} {money} Dollars!");
+					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 
@@ -976,42 +1219,46 @@ namespace RicaBotpaw.Modules.Public
 			/// Dailies this instance.
 			/// </summary>
 			/// <returns></returns>
-			[Command("daily")]
+			[Command("daily", RunMode = RunMode.Async)]
 			[Remarks("Daily tokens and money! Yey!")]
 			public async Task Daily()
 			{
-				if (user == null)
+				if (BotCooldown.isCooldownRunning == false)
 				{
-					user = Context.User;
+					var user = Context.User;
 					var result = Database.CheckExistingUser(user);
 
 					if (result.Count() <= 0)
-					{
 						Database.EnterUser(user);
-					}
 
-					var tableName = Database.GetUserStatus(user);
+					var discord = Database.GetUserStatus(user);
 
 					DateTime now = DateTime.Now;
-					DateTime daily = tableName.FirstOrDefault().Daily;
-					int diff = DateTime.Compare(daily, now);
+					DateTime daily = discord.FirstOrDefault().Daily;
+					int diff1 = DateTime.Compare(daily, now);
 
-					if ((tableName.FirstOrDefault().Daily.ToString() == "2001-01-01 00:00:00") ||
-						(daily.DayOfYear < now.DayOfYear && diff < 0 || diff >= 0))
+					if ((discord.FirstOrDefault().Daily.ToString() == "0001-01-01 00:00:00") ||
+						(daily.DayOfYear < now.DayOfYear && diff1 < 0 || diff1 >= 0))
 					{
 						Database.ChangeDaily(user);
 						int Money = 400;
 						uint Tokens = 250;
-						Database.ChangeTokens(user, Tokens);
 						Database.AddMoney2(user, Money);
-						await ReplyAsync($"You received your {Tokens} daily tokens and {Money} daily dollars!");
+						Database.ChangeTokens(user, Tokens);
+						await ReplyAsync($"You have received your daily {Money} Dollars and {Tokens} Prestige-Tokens!");
+						await BotCooldown.Cooldown();
 					}
 					else
 					{
-						TimeSpan dif = now - daily;
-						TimeSpan di = new TimeSpan(23 - dif.Hours, 60 - dif.Minutes, 60 - dif.Seconds);
-						await ReplyAsync($"Your daily renews in {di}");
+						TimeSpan diff2 = now - daily;
+						TimeSpan di = new TimeSpan(23 - diff2.Hours, 60 - diff2.Minutes, 60 - diff2.Seconds);
+						await ReplyAsync($"Your daily renews in {di}.");
+						await BotCooldown.Cooldown();
 					}
+				}
+				else
+				{
+					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 
@@ -1022,44 +1269,51 @@ namespace RicaBotpaw.Modules.Public
 			[Group("Gamble")]
 			public class EcoGames : ModuleBase
 			{
+
 				/// <summary>
 				/// Either you win or you lose.
 				/// </summary>
 				/// <param name="bet">The bet.</param>
 				/// <returns></returns>
-				[Command("bet")]
+				[Command("bet", RunMode = RunMode.Async)]
 				[Remarks("Place your bets and roll the dice!")]
 				public async Task betCmd(int bet)
 				{
-					var moneydiscord = Database.GetUserMoney(Context.User);
-
-					if (moneydiscord.FirstOrDefault().Money < bet)
+					if (BotCooldown.isCooldownRunning == false)
 					{
-						await ReplyAsync("You do not have enough money to bet this high");
-					}
-					else
-					{
-						Random rand = new Random();
-						Random rand2 = new Random();
+						var moneydiscord = Database.GetUserMoney(Context.User);
 
-						int userRoll = rand2.Next(1, 6);
-						int rolled = rand.Next(1, 9);
-
-						if (userRoll == rolled)
+						if (moneydiscord.FirstOrDefault().Money < bet)
 						{
-							Database.UpdateMoney(Context.User, bet);
-							await ReplyAsync($"Congrats {Context.User.Username}!, you have made ${bet} off rolling a **{userRoll}**!");
+							await ReplyAsync("You do not have enough money to bet this high");
+							await BotCooldown.Cooldown();
 						}
 						else
 						{
-							int betRemove = -bet;
+							Random rand = new Random();
+							Random rand2 = new Random();
 
-							Database.UpdateMoney(Context.User, betRemove);
-							await ReplyAsync($"Sorry **{Context.User.Username}**, you lost ${bet} off rolling a **{userRoll}**!");
+							int userRoll = rand2.Next(1, 6);
+							int rolled = rand.Next(1, 9);
+
+							if (userRoll == rolled)
+							{
+								Database.UpdateMoney(Context.User, bet);
+								await ReplyAsync($"Congrats {Context.User.Username}!, you have made ${bet} off rolling a **{userRoll}**!");
+								await BotCooldown.Cooldown();
+							}
+							else
+							{
+								int betRemove = -bet;
+
+								Database.UpdateMoney(Context.User, betRemove);
+								await ReplyAsync($"Sorry **{Context.User.Username}**, you lost ${bet} off rolling a **{userRoll}**!");
+								await BotCooldown.Cooldown();
+							}
 						}
 					}
 				}
 			}
 		}
-    }
+	}
 }

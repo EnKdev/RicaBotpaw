@@ -1,57 +1,47 @@
-﻿using System;
-
-namespace RicaBotpaw.Config
+﻿namespace RicaBotpaw.Config
 {
 	/// <summary>
-	/// This is the configuration class
+	///     This is the configuration class
 	/// </summary>
 	public class RBConfig
 	{
 		/// <summary>
-		/// Contains the bots version
+		///     Contains the bots version
 		/// </summary>
 		/// <value>
-		/// The bot version.
+		///     The bot version.
 		/// </value>
-<<<<<<< HEAD
-		public static string BotVersion = "1.8.1-bugfix";
-=======
-		public static string BotVersion = "1.7.2";
->>>>>>> origin/master
+		public static string BotVersion = "1.8.3";
 
 		/// <summary>
-		/// Contains the bots build revision
+		///     Contains the bots build revision
 		/// </summary>
 		/// <value>
-		/// The build revision.
+		///     The build revision.
 		/// </value>
-<<<<<<< HEAD
-		public static string BuildRevision = "0801181510_RB_181";
-=======
-		public static string BuildRevision = "0412171610_RB_172";
->>>>>>> origin/master
+		public static string BuildRevision = "2901182220_RB_183";
 
 		/// <summary>
-		/// Contains the bots author
+		///     Contains the bots author
 		/// </summary>
 		/// <value>
-		/// The bot author.
+		///     The bot author.
 		/// </value>
 		public static string BotAuthor = "EnK_/zi8tx/R3sharp";
 
 		/// <summary>
-		/// Contains the bots module count
+		///     Contains the bots module count
 		/// </summary>
 		/// <value>
-		/// The module count.
+		///     The module count.
 		/// </value>
 		public static int ModuleCount = 6;
 
 		/// <summary>
-		/// Contains the number of tables used in the bots database
+		///     Contains the bots databases
 		/// </summary>
 		/// <value>
-		/// The database tables.
+		///     The Database count
 		/// </value>
 		public static int BotDatabases = 1;
 	}
