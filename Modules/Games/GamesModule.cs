@@ -17,17 +17,6 @@ namespace RicaBotpaw.Modules.Games
 	[Remarks("This is the games module which contains all of the bots games.")]
 	public class Games : ModuleBase
 	{
-		// Turn-based fight
-
-		private static string player1;
-		private static string player2;
-		private static string whosTurn;
-		private static string whoWaits;
-		private static string placeHolder;
-		private static int health1 = 100;
-		private static int health2 = 100;
-		private static string SwitchCaseString = "nofight";
-
 		/// <summary>
 		///     The service
 		/// </summary>
@@ -58,7 +47,10 @@ namespace RicaBotpaw.Modules.Games
 			"My sources say yes",
 			"My sources say no",
 			"Maybe in another life",
-			"I am not a prediction"
+			"I am not a prediction",
+			"Reply hazy, try again!",
+			"Obviously no",
+			"Obviously yes!"
 		};
 
 		private readonly Random rand = new Random();

@@ -1,21 +1,4 @@
-﻿**__Rica Botpaw - Version 1.8.3__**
+﻿**__Rica Botpaw - Version 1.8.4__**
 ---------------------------
-Instead of an old fashioned changelog, i am just giving a quick QnA about what changed because i am somewhat feeling too lazy to make a simple short changelog. *shrug*
----------------------------
-Q: What is new? 
-A: Well not much, just tweaked a lot of the bots Command Runmodes and added a cooldown which gets triggered after each command use.
-
-Q: How long is the cooldown? 
-A: 5 Seconds. This is just to prevent the bot becoming unresponsive and command spam.
-
-Q: Is the cooldown bot-wide? 
-A: Yes, it is. I have no intention to make user cooldowns because that somehow went incompatible with my commands. Don't ask me.
-
-Q: Is there still a chance of the bot becoming unresponsive?
-A: Maybe, but that's an unknown factor i always have to be aware of.
-
-Q: Is there any module which is exempt of the cooldown?
-A: Yes, for faster moderation and administration, the Admin Module is exempt of the cooldown so mods and admins can act without having to wait 5 seconds between command. Server Safety rules, kids!
-
-Q: Anything else?
-A: Yes. Turn-based fights have been removed as they have been incompatible with the cooldown.
+Once again a stability update. This removes a problematic error which is to be believed be caused by the XP and level function by removing the entirety of said function.
+Any user who have gained a level have gotten a bonus of 150 bot currency and 100 prestige tokens as a compensation.

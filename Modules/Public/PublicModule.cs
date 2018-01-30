@@ -582,9 +582,7 @@ namespace RicaBotpaw.Modules.Public
 				embed.Description = (Context.User.Mention + "\n\n" + user.Username + "'s current status is as followed: \n"
 									 + ":small_blue_diamond:" + "UserID: " + tableName.FirstOrDefault().UserId + "\n"
 									 + ":small_blue_diamond:" + tableName.FirstOrDefault().Tokens + " tokens!\n"
-									 + ":small_blue_diamond:" + "Current custom rank: " + tableName.FirstOrDefault().Rank + "\n"
-									 + ":small_blue_diamond:" + "Level: " + tableName.FirstOrDefault().Level + "\n"
-									 + ":small_blue_diamond:" + "XP: " + tableName.FirstOrDefault().XP + "\n");
+									 + ":small_blue_diamond:" + "Current custom rank: " + tableName.FirstOrDefault().Rank + "\n");
 
 				await Context.Channel.SendMessageAsync("", false, embed);
 				await BotCooldown.Cooldown();

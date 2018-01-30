@@ -72,7 +72,6 @@ namespace RicaBotpaw
 			_client.Ready += onReady;
 			_client.UserJoined += onJoin;
 			_client.UserLeft += onLeave;
-			_client.MessageReceived += giveXP;
 		}
 
 		/// <summary>
@@ -126,44 +125,6 @@ namespace RicaBotpaw
 		{
 			var channel = user.Guild.DefaultChannel;
 			await channel.SendMessageAsync(user.Username + " has left us alone! Parting is such a sweet sorrow...");
-		}
-
-		/// <summary>
-		///     This is what gives a user the XP and also it levels them up.
-		/// </summary>
-		/// <param name="msg">The MSG.</param>
-		/// <returns></returns>
-		public async Task giveXP(SocketMessage msg)
-		{
-			var user = msg.Author;
-			var result = Database.CheckExistingUser(user);
-
-			if (result.Count <= 0 && user.IsBot != true)
-				Database.EnterUser(user);
-
-			var userData = Database.GetUserStatus(user).FirstOrDefault();
-			var xp = XP.returnXP(msg);
-			var xpToLevelUp = XP.calculateNextLevel(userData.Level);
-
-			if (userData.XP >= xpToLevelUp)
-			{
-				Database.levelUp(user, xp);
-				Database.AddMoney(user);
-
-				var embed = new EmbedBuilder();
-				embed.WithColor(new Color(0x4d006d)).AddField(y =>
-				{
-					var userData2 = Database.GetUserStatus(user).FirstOrDefault();
-					y.Name = "Level Up!";
-					y.Value = $"{user.Mention} has leveled up to level {userData2.Level}!";
-				});
-
-				await msg.Channel.SendMessageAsync("", embed: embed);
-			}
-			else if (user.IsBot != true)
-			{
-				Database.addXP(user, xp);
-			}
 		}
 
 		public async Task CheckTime()

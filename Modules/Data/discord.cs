@@ -40,22 +40,6 @@ namespace RicaBotpaw.Modules.Data
 		public uint Tokens { get; set; }
 
 		/// <summary>
-		///     Gets or sets the Level
-		/// </summary>
-		/// <value>
-		///     The Level
-		/// </value>
-		public int Level { get; set; }
-
-		/// <summary>
-		///     Gets or sets the XP
-		/// </summary>
-		/// <value>
-		///     The XP
-		/// </value>
-		public int XP { get; set; }
-
-		/// <summary>
 		///     Gets or sets the daily.
 		/// </summary>
 		/// <value>

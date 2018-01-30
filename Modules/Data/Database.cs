@@ -182,7 +182,7 @@ namespace RicaBotpaw.Modules.Data
 		{
 			var database = new Database("vampdb");
 			var str = string.Format(
-				"INSERT INTO `discord` (user_id, username, tokens, customRank, level, xp) VALUES ('{0}', '{1}', '100', '', '1', '1')",
+				"INSERT INTO `discord` (user_id, username, tokens, customRank) VALUES ('{0}', '{1}', '100', '')",
 				user.Id, user.Username);
 			var table = database.FireCommand(str);
 			database.CloseConnection();
@@ -248,8 +248,6 @@ namespace RicaBotpaw.Modules.Data
 					var userName = (string) tableName["username"];
 					var currentTokens = (uint) tableName["tokens"];
 					var rank = (string) tableName["customRank"];
-					var level = (int) tableName["level"];
-					var xp = (int) tableName["xp"];
 					var daily = (DateTime) tableName["daily"];
 
 					result.Add(new discord
@@ -258,8 +256,6 @@ namespace RicaBotpaw.Modules.Data
 						Username = userName,
 						Tokens = currentTokens,
 						Rank = rank,
-						Level = level,
-						XP = xp,
 						Daily = daily
 					});
 				}
@@ -286,50 +282,6 @@ namespace RicaBotpaw.Modules.Data
 			try
 			{
 				var strings = string.Format("UPDATE `discord` SET tokens = tokens + '{0}' WHERE user_id = '{1}'", tokens, user.Id);
-				var reader = database.FireCommand(strings);
-				reader.Close();
-				database.CloseConnection();
-			}
-			catch (Exception e)
-			{
-				database.CloseConnection();
-			}
-		}
-
-		/// <summary>
-		///     To add XP to someone inside the DB
-		/// </summary>
-		/// <param name="user">The user.</param>
-		/// <param name="xp">The xp.</param>
-		public static void addXP(IUser user, int xp)
-		{
-			var database = new Database("vampdb");
-
-			try
-			{
-				var strings = $"UPDATE `discord` SET xp = xp + {xp} where user_id = {user.Id}";
-				var reader = database.FireCommand(strings);
-				reader.Close();
-				database.CloseConnection();
-			}
-			catch (Exception e)
-			{
-				database.CloseConnection();
-			}
-		}
-
-		/// <summary>
-		///     The method to level up someone after a certain amount of XP has been passed
-		/// </summary>
-		/// <param name="user">The user.</param>
-		/// <param name="xp">The xp.</param>
-		public static void levelUp(IUser user, int xp)
-		{
-			var database = new Database("vampdb");
-
-			try
-			{
-				var strings = $"UPDATE `discord` SET level = level + {1}, xp = xp + {xp} WHERE user_id = {user.Id}";
 				var reader = database.FireCommand(strings);
 				reader.Close();
 				database.CloseConnection();
