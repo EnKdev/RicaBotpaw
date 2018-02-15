@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -7,6 +8,8 @@ using Discord.WebSocket;
 using ImageSharp;
 using ImageSharp.Dithering;
 using ImageSharp.Processing;
+using Newtonsoft.Json;
+using RicaBotpaw.Logging;
 using RicaBotpaw.Modules.Data;
 
 namespace RicaBotpaw.Modules.Image
@@ -18,6 +21,9 @@ namespace RicaBotpaw.Modules.Image
 	[Remarks("Everything related to images and such work with this module. The bot's specially designed Imaging Library takes care of the rest.")]
 	public class Imaging : ModuleBase
 	{
+		private int modEnable;
+		private int gNoticeSent;
+
 		/// <summary>
 		///     The service
 		/// </summary>
@@ -32,6 +38,34 @@ namespace RicaBotpaw.Modules.Image
 			_service = service;
 		}
 
+		private async Task CheckEnabledImageModule([Remainder] IGuild g = null)
+		{
+			if (g == null) g = Context.Guild;
+
+			if (!File.Exists($"./serv_configs/{g.Id.ToString()}_config.rconf"))
+			{
+				await ReplyAsync(ModStrings.GuildNoConfigFile);
+				gNoticeSent = 1;
+				return;
+			}
+
+			var fileText = File.ReadAllText($"./serv_configs/{g.Id.ToString()}_config.rconf");
+			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
+
+			if (mods.Guild != g.Id)
+			{
+				await ReplyAsync(
+					"Specified Guild ID doesn't match saved Guild ID in config file."); // This should actually never happen
+				return;
+			}
+			if (mods.ModImg == 1)
+			{
+				modEnable = 1;
+				return;
+			}
+			modEnable = 0;
+		}
+
 		/// <summary>
 		/// Flippedy flip!
 		/// </summary>
@@ -42,14 +76,32 @@ namespace RicaBotpaw.Modules.Image
 		[Remarks("Flips your Discord Avatar or another image specified through an URL")]
 		public async Task FlipImage(int degrees = 888, string url = null)
 		{
-			if (BotCooldown.isCooldownRunning == false)
+			var g = Context.Guild as SocketGuild;
+			await CheckEnabledImageModule(g);
+
+			if (modEnable == 1)
 			{
-				await flipImage(degrees, url);
-				await BotCooldown.Cooldown();
+				if (BotCooldown.isCooldownRunning == false)
+				{
+					await flipImage(degrees, url);
+					await BotCooldown.Cooldown();
+				}
+				else
+				{
+					await ReplyAsync(BotCooldown.cooldownMsg);
+				}
 			}
 			else
 			{
-				await ReplyAsync(BotCooldown.cooldownMsg);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.ImagingNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -101,23 +153,28 @@ namespace RicaBotpaw.Modules.Image
 		[Remarks("We all know Instagram to be honest")]
 		public async Task filterImage(string filter = null, [Remainder] SocketUser user = null)
 		{
-			if (BotCooldown.isCooldownRunning == false)
+			var g = Context.Guild as SocketGuild;
+			await CheckEnabledImageModule(g);
+
+			if (modEnable == 1)
 			{
-				var task = Task.Run(async () =>
+				if (BotCooldown.isCooldownRunning == false)
 				{
-					var core = new ImageCore.ImageCore();
-					Image<Rgba32> img = null;
-
-					if (filter != "help")
+					var task = Task.Run(async () =>
 					{
-						if (user != null) img = await core.StartStreamAsync(user);
-						else img = await core.StartStreamAsync(Context.User);
-						img.Resize(500, 500);
-					}
+						var core = new ImageCore.ImageCore();
+						Image<Rgba32> img = null;
 
-					var rand = new Random();
-					string[] randomFilters =
-					{
+						if (filter != "help")
+						{
+							if (user != null) img = await core.StartStreamAsync(user);
+							else img = await core.StartStreamAsync(Context.User);
+							img.Resize(500, 500);
+						}
+
+						var rand = new Random();
+						string[] randomFilters =
+						{
 						"sepia",
 						"vignette",
 						"polaroid",
@@ -135,76 +192,89 @@ namespace RicaBotpaw.Modules.Image
 						"colorblind",
 						"blackwhite",
 						"threshold"
-					};
+						};
 
-					if (filter == null || filter == "random") filter = randomFilters[rand.Next(0, randomFilters.Length)];
-					await Context.Channel.SendMessageAsync($"Applying filter = {filter}");
-					switch (filter)
-					{
-						case "sepia":
-							img.Sepia();
-							break;
-						case "vignette":
-							img.Vignette();
-							break;
-						case "polaroid":
-							img.Polaroid();
-							break;
-						case "pixelate":
-							img.Pixelate(10);
-							break;
-						case "oilpaint":
-							img.OilPaint();
-							break;
-						case "lomograph":
-							img.Lomograph();
-							break;
-						case "kodachrome":
-							img.Kodachrome();
-							break;
-						case "invert":
-							img.Invert();
-							break;
-						case "glow":
-							img.Glow();
-							break;
-						case "sharpen":
-							img.GaussianSharpen();
-							break;
-						case "blur":
-							img.GaussianBlur();
-							break;
-						case "dither":
-							img.Dither(new JarvisJudiceNinke(), .5f);
-							break;
-						case "detectedges":
-							img.DetectEdges();
-							break;
-						case "colorblind":
-							img.ColorBlindness(ColorBlindness.Achromatomaly);
-							break;
-						case "blackwhite":
-							img.BlackWhite();
-							break;
-						case "threshold":
-							img.BinaryThreshold(.5f);
-							break;
+						if (filter == null || filter == "random") filter = randomFilters[rand.Next(0, randomFilters.Length)];
+						await Context.Channel.SendMessageAsync($"Applying filter = {filter}");
+						switch (filter)
+						{
+							case "sepia":
+								img.Sepia();
+								break;
+							case "vignette":
+								img.Vignette();
+								break;
+							case "polaroid":
+								img.Polaroid();
+								break;
+							case "pixelate":
+								img.Pixelate(10);
+								break;
+							case "oilpaint":
+								img.OilPaint();
+								break;
+							case "lomograph":
+								img.Lomograph();
+								break;
+							case "kodachrome":
+								img.Kodachrome();
+								break;
+							case "invert":
+								img.Invert();
+								break;
+							case "glow":
+								img.Glow();
+								break;
+							case "sharpen":
+								img.GaussianSharpen();
+								break;
+							case "blur":
+								img.GaussianBlur();
+								break;
+							case "dither":
+								img.Dither(new JarvisJudiceNinke(), .5f);
+								break;
+							case "detectedges":
+								img.DetectEdges();
+								break;
+							case "colorblind":
+								img.ColorBlindness(ColorBlindness.Achromatomaly);
+								break;
+							case "blackwhite":
+								img.BlackWhite();
+								break;
+							case "threshold":
+								img.BinaryThreshold(.5f);
+								break;
 
-						case "help":
-							var embed = new EmbedBuilder();
-							embed.AddInlineField("Filter help:",
-								"You can try any of these filters/operations to yours or another users avatar:\n" +
-								"```sepia, vignette, polaroid, pixelate, oilpaint, lomograph, kodachrome, invert, grayscale, glow, sharpen, blur, dither, detectedges, colorblind, blackwhite, threshold or 'random' for a random selection.```");
-							await Context.Channel.SendMessageAsync("", false, embed);
-							return;
-					}
-					await core.StopStreamAsync(Context.Message, img);
-					await BotCooldown.Cooldown();
-				});
+							case "help":
+								var embed = new EmbedBuilder();
+								embed.AddInlineField("Filter help:",
+									"You can try any of these filters/operations to yours or another users avatar:\n" +
+									"```sepia, vignette, polaroid, pixelate, oilpaint, lomograph, kodachrome, invert, grayscale, glow, sharpen, blur, dither, detectedges, colorblind, blackwhite, threshold or 'random' for a random selection.```");
+								await Context.Channel.SendMessageAsync("", false, embed);
+								return;
+						}
+						await core.StopStreamAsync(Context.Message, img);
+						await BotCooldown.Cooldown();
+					});
+				}
+				else
+				{
+					await ReplyAsync(BotCooldown.cooldownMsg);
+				}
 			}
 			else
 			{
-				await ReplyAsync(BotCooldown.cooldownMsg);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.ImagingNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 	}

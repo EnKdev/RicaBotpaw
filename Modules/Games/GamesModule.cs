@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -7,9 +8,11 @@ using Discord.WebSocket;
 using ImageSharp;
 using RicaBotpaw.Modules.Data;
 using SixLabors.Primitives;
+using Newtonsoft.Json;
+using RicaBotpaw.Logging;
 
 namespace RicaBotpaw.Modules.Games
-{
+{ 
 	/// <summary>
 	///     No bot without games.
 	/// </summary>
@@ -17,6 +20,9 @@ namespace RicaBotpaw.Modules.Games
 	[Remarks("This is the games module which contains all of the bots games.")]
 	public class Games : ModuleBase
 	{
+		private int modEnable;
+		private int gNoticeSent;
+
 		/// <summary>
 		///     The service
 		/// </summary>
@@ -41,7 +47,7 @@ namespace RicaBotpaw.Modules.Games
 			"I don't know",
 			"No.",
 			"It would be a come and go",
-			"Definitly",
+			"Definitely",
 			"Care to elaborate?",
 			"If you want to...",
 			"My sources say yes",
@@ -71,6 +77,34 @@ namespace RicaBotpaw.Modules.Games
 			_service = service;
 		}
 
+		private async Task CheckEnabledGameModule([Remainder] IGuild g = null)
+		{
+			if (g == null) g = Context.Guild;
+
+			if (!File.Exists($"./serv_configs/{g.Id.ToString()}_config.rconf"))
+			{
+				await ReplyAsync(ModStrings.GuildNoConfigFile);
+				gNoticeSent = 1;
+				return;
+			}
+
+			var fileText = File.ReadAllText($"./serv_configs/{g.Id.ToString()}_config.rconf");
+			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
+
+			if (mods.Guild != g.Id)
+			{
+				await ReplyAsync(
+					"Specified Guild ID doesn't match saved Guild ID in config file."); // This should actually never happen
+				return;
+			}
+			if (mods.ModGame == 1)
+			{
+				modEnable = 1;
+				return;
+			}
+			modEnable = 0;
+		}
+
 		/// <summary>
 		/// Gives you a prediction
 		/// </summary>
@@ -80,35 +114,53 @@ namespace RicaBotpaw.Modules.Games
 		[Remarks("Gives a prediction")]
 		public async Task EightBall([Remainder] string input)
 		{
-			if (BotCooldown.isCooldownRunning == false)
+			var g = Context.Guild as SocketGuild;
+			await CheckEnabledGameModule(g);
+
+			if (modEnable == 1)
 			{
-				if (input.Equals("loop"))
+				if (BotCooldown.isCooldownRunning == false)
 				{
-					await ReplyAsync(
-						"The prediction is never the prediction is never the prediction is never the prediction is never the prediction is never the prediction"); // The stanley parable reference
-					await BotCooldown.Cooldown();
-				}
-				else if (input.Equals("force"))
-				{
-					await ReplyAsync("These are not the droids you are looking for."); // Star wars
-					await BotCooldown.Cooldown();
-				}
-				else if (input.Equals("chicken"))
-				{
-					await ReplyAsync("Winner Winner Chicken-Dinner!"); // PUBG
-					await BotCooldown.Cooldown();
+					if (input.Equals("loop"))
+					{
+						await ReplyAsync(
+							"The prediction is never the prediction is never the prediction is never the prediction is never the prediction is never the prediction"); // The stanley parable reference
+						await BotCooldown.Cooldown();
+					}
+					else if (input.Equals("force"))
+					{
+						await ReplyAsync("These are not the droids you are looking for."); // Star wars
+						await BotCooldown.Cooldown();
+					}
+					else if (input.Equals("chicken"))
+					{
+						await ReplyAsync("Winner Winner Chicken-Dinner!"); // PUBG
+						await BotCooldown.Cooldown();
+					}
+					else
+					{
+						var randomIndex = rand.Next(eightBallPredicts.Length);
+						var text = eightBallPredicts[randomIndex];
+						await ReplyAsync(Context.User.Mention + ", " + text);
+						await BotCooldown.Cooldown();
+					}
 				}
 				else
 				{
-					var randomIndex = rand.Next(eightBallPredicts.Length);
-					var text = eightBallPredicts[randomIndex];
-					await ReplyAsync(Context.User.Mention + ", " + text);
-					await BotCooldown.Cooldown();
+					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 			else
 			{
-				await ReplyAsync(BotCooldown.cooldownMsg);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.GamesNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -122,97 +174,115 @@ namespace RicaBotpaw.Modules.Games
 		[Remarks("Rock, Paper, Scissors")]
 		public async Task RPS([Remainder] string input)
 		{
-			if (BotCooldown.isCooldownRunning == false)
+			var g = Context.Guild as SocketGuild;
+			await CheckEnabledGameModule(g);
+
+			if (modEnable == 1)
 			{
-				if (input.Equals("Dwayne 'The Rock' Johnson"))
+				if (BotCooldown.isCooldownRunning == false)
 				{
-					await ReplyAsync("Is that a choice? I am confused.");
-					await BotCooldown.Cooldown();
-				}
-				else if (input.Equals("Donald Trump"))
-				{
-					await ReplyAsync("Have a drawing donald made!");
-					await Context.Channel.SendFileAsync(
-						@".\images\DonaldDraws1511338722535.gif");
-					await BotCooldown.Cooldown();
+					if (input.Equals("Dwayne 'The Rock' Johnson"))
+					{
+						await ReplyAsync("Is that a choice? I am confused.");
+						await BotCooldown.Cooldown();
+					}
+					else if (input.Equals("Donald Trump"))
+					{
+						await ReplyAsync("Have a drawing donald made!");
+						await Context.Channel.SendFileAsync(
+							@".\images\DonaldDraws1511338722535.gif");
+						await BotCooldown.Cooldown();
+					}
+					else
+					{
+						var randIdx = rand.Next(rps.Length);
+						var choice = rps[randIdx];
+
+						// Rock
+						if (choice.Equals("Rock") && input.Equals("Rock"))
+						{
+							await ReplyAsync($"You chose {input}, i chose {choice}\nDRAW!");
+							await BotCooldown.Cooldown();
+						}
+						else if (choice.Equals("Rock") && input.Equals("Scissors"))
+						{
+							await ReplyAsync($"You chose {input}, i chose {choice}\nI WIN!");
+							await BotCooldown.Cooldown();
+						}
+						else if (choice.Equals("Rock") && input.Equals("Paper"))
+						{
+							await ReplyAsync($"You chose {input}, i chose {choice}\nYOU WON!");
+							await BotCooldown.Cooldown();
+						}
+
+						// Paper
+						else if (choice.Equals("Paper") && input.Equals("Paper"))
+						{
+							await ReplyAsync($"You chose {input}, i chose {choice}\nDRAW!");
+							await BotCooldown.Cooldown();
+						}
+						else if (choice.Equals("Paper") && input.Equals("Rock"))
+						{
+							await ReplyAsync($"You chose {input}, i chose {choice}\nI WIN!");
+							await BotCooldown.Cooldown();
+						}
+						else if (choice.Equals("Paper") && input.Equals("Scissors"))
+						{
+							await ReplyAsync($"You chose {input}, i chose {choice}\nYOU WON!");
+							await BotCooldown.Cooldown();
+						}
+
+						// Scissors
+						else if (choice.Equals("Scissors") && input.Equals("Scissors"))
+						{
+							await ReplyAsync($"You chose {input}, i chose {choice}\nDRAW!");
+							await BotCooldown.Cooldown();
+						}
+						else if (choice.Equals("Scissors") && input.Equals("Paper"))
+						{
+							await ReplyAsync($"You chose {input}, i chose {choice}\nI WIN!");
+							await BotCooldown.Cooldown();
+						}
+						else if (choice.Equals("Scissors") && input.Equals("Rock"))
+						{
+							await ReplyAsync($"You chose {input}, i chose {choice}\nYOU WON!");
+							await BotCooldown.Cooldown();
+						}
+
+						// Lel
+						else if (choice.Equals("Rock") && input.Equals("Nuke") || choice.Equals("Paper") && input.Equals("Nuke") ||
+								 choice.Equals("Scissors") && input.Equals("Nuke"))
+						{
+							await ReplyAsync($"You chose a nuke. I chose {choice}. Guess it is not fun to play against Kim-Jong-Un");
+							await Context.Channel.SendFileAsync(@".\images\nuke.gif");
+							await BotCooldown.Cooldown();
+						}
+
+						// If no input matches the required choices (Rock, Paper, Scissors, Nuke, DTRJ, Donald)
+						else if (input != "Rock" || input != "Scissors" || input != "Paper" || input != "Nuke" ||
+								 input != "Dwayne 'The Rock' Johnson")
+						{
+							await ReplyAsync("Invalid input detected. Try again with a valid choice.");
+							await BotCooldown.Cooldown();
+						}
+					}
 				}
 				else
 				{
-					var randIdx = rand.Next(rps.Length);
-					var choice = rps[randIdx];
-
-					// Rock
-					if (choice.Equals("Rock") && input.Equals("Rock"))
-					{
-						await ReplyAsync($"You chose {input}, i chose {choice}\nDRAW!");
-						await BotCooldown.Cooldown();
-					}
-					else if (choice.Equals("Rock") && input.Equals("Scissors"))
-					{
-						await ReplyAsync($"You chose {input}, i chose {choice}\nI WIN!");
-						await BotCooldown.Cooldown();
-					}
-					else if (choice.Equals("Rock") && input.Equals("Paper"))
-					{
-						await ReplyAsync($"You chose {input}, i chose {choice}\nYOU WON!");
-						await BotCooldown.Cooldown();
-					}
-
-					// Paper
-					else if (choice.Equals("Paper") && input.Equals("Paper"))
-					{
-						await ReplyAsync($"You chose {input}, i chose {choice}\nDRAW!");
-						await BotCooldown.Cooldown();
-					}
-					else if (choice.Equals("Paper") && input.Equals("Rock"))
-					{
-						await ReplyAsync($"You chose {input}, i chose {choice}\nI WIN!");
-						await BotCooldown.Cooldown();
-					}
-					else if (choice.Equals("Paper") && input.Equals("Scissors"))
-					{
-						await ReplyAsync($"You chose {input}, i chose {choice}\nYOU WON!");
-						await BotCooldown.Cooldown();
-					}
-
-					// Scissors
-					else if (choice.Equals("Scissors") && input.Equals("Scissors"))
-					{
-						await ReplyAsync($"You chose {input}, i chose {choice}\nDRAW!");
-						await BotCooldown.Cooldown();
-					}
-					else if (choice.Equals("Scissors") && input.Equals("Paper"))
-					{
-						await ReplyAsync($"You chose {input}, i chose {choice}\nI WIN!");
-						await BotCooldown.Cooldown();
-					}
-					else if (choice.Equals("Scissors") && input.Equals("Rock"))
-					{
-						await ReplyAsync($"You chose {input}, i chose {choice}\nYOU WON!");
-						await BotCooldown.Cooldown();
-					}
-
-					// Lel
-					else if (choice.Equals("Rock") && input.Equals("Nuke") || choice.Equals("Paper") && input.Equals("Nuke") ||
-							 choice.Equals("Scissors") && input.Equals("Nuke"))
-					{
-						await ReplyAsync($"You chose a nuke. I chose {choice}. Guess it is not fun to play against Kim-Jong-Un");
-						await Context.Channel.SendFileAsync(@".\images\nuke.gif");
-						await BotCooldown.Cooldown();
-					}
-
-					// If no input matches the required choices (Rock, Paper, Scissors, Nuke, DTRJ, Donald)
-					else if (input != "Rock" || input != "Scissors" || input != "Paper" || input != "Nuke" ||
-							 input != "Dwayne 'The Rock' Johnson")
-					{
-						await ReplyAsync($"Invalid input detected. Try again with a valid choice.");
-						await BotCooldown.Cooldown();
-					}
+					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 			else
 			{
-				await ReplyAsync(BotCooldown.cooldownMsg);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.GamesNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -226,40 +296,58 @@ namespace RicaBotpaw.Modules.Games
 		[Remarks("Flips a coin")]
 		public async Task CoinFlip(string choice)
 		{
-			if (BotCooldown.isCooldownRunning == false)
-			{
-				var randIdx = rand.Next(coinSides.Length);
-				var side = coinSides[randIdx];
+			var g = Context.Guild as SocketGuild;
+			await CheckEnabledGameModule(g);
 
-				if (choice.Equals("Heads") || choice.Equals("heads") && side.Equals("Tails"))
+			if (modEnable == 1)
+			{
+				if (BotCooldown.isCooldownRunning == false)
 				{
-					await ReplyAsync("You lost!\nYou chose Heads, and the coin landed on Tails");
-					await BotCooldown.Cooldown();
+					var randIdx = rand.Next(coinSides.Length);
+					var side = coinSides[randIdx];
+
+					if (choice.Equals("Heads") || choice.Equals("heads") && side.Equals("Tails"))
+					{
+						await ReplyAsync("You lost!\nYou chose Heads, and the coin landed on Tails");
+						await BotCooldown.Cooldown();
+					}
+					else if (choice.Equals("Tails") || choice.Equals("tails") && side.Equals("Heads"))
+					{
+						await ReplyAsync("You lost!\nYou chose Tails, and the coin landed on Heads");
+						await BotCooldown.Cooldown();
+					}
+					else if (choice.Equals("Heads") || choice.Equals("heads") && side.Equals("Heads"))
+					{
+						await ReplyAsync("You won!\nYou chose Heads, and the coin landed on Heads");
+						await BotCooldown.Cooldown();
+					}
+					else if (choice.Equals("Tails") || choice.Equals("tails") && side.Equals("Tails"))
+					{
+						await ReplyAsync("You won!\nYou chose Tails, and the coin landed on Tails");
+						await BotCooldown.Cooldown();
+					}
+					else if (choice != "Heads" || choice != "heads" || choice != "Tails" || choice != "tails")
+					{
+						await ReplyAsync("Invalid input detected. Please use only heads or tails");
+						await BotCooldown.Cooldown();
+					}
 				}
-				else if (choice.Equals("Tails") || choice.Equals("tails") && side.Equals("Heads"))
+				else
 				{
-					await ReplyAsync("You lost!\nYou chose Tails, and the coin landed on Heads");
-					await BotCooldown.Cooldown();
-				}
-				else if (choice.Equals("Heads") || choice.Equals("heads") && side.Equals("Heads"))
-				{
-					await ReplyAsync("You won!\nYou chose Heads, and the coin landed on Heads");
-					await BotCooldown.Cooldown();
-				}
-				else if (choice.Equals("Tails") || choice.Equals("tails") && side.Equals("Tails"))
-				{
-					await ReplyAsync("You won!\nYou chose Tails, and the coin landed on Tails");
-					await BotCooldown.Cooldown();
-				}
-				else if (choice != "Heads" || choice != "heads" || choice != "Tails" || choice != "tails")
-				{
-					await ReplyAsync("Invalid input detected. Please use only heads or tails");
-					await BotCooldown.Cooldown();
+					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 			else
 			{
-				await ReplyAsync(BotCooldown.cooldownMsg);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.GamesNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -276,85 +364,103 @@ namespace RicaBotpaw.Modules.Games
 		public async Task ArrowSpinAsync(IGuildUser _user1 = null, IGuildUser _user2 = null, IGuildUser _user3 = null,
 			IGuildUser _user4 = null)
 		{
-			if (BotCooldown.isCooldownRunning == false)
+			var g = Context.Guild as SocketGuild;
+			await CheckEnabledGameModule(g);
+
+			if (modEnable == 1)
 			{
-				var rand = new Random();
-				IVoiceChannel channel2 = null;
-
-				var randomUsers = new IGuildUser[4];
-
-				try
+				if (BotCooldown.isCooldownRunning == false)
 				{
-					channel2 = (Context.User as IVoiceState).VoiceChannel;
-					var vc = channel2 as SocketVoiceChannel;
-					var voiceUsers = vc.Users;
+					var rand = new Random();
+					IVoiceChannel channel2 = null;
 
-					randomUsers[0] = voiceUsers.ElementAt(0);
-					randomUsers[1] = voiceUsers.ElementAt(1);
-					randomUsers[2] = voiceUsers.ElementAt(2);
-					randomUsers[3] = voiceUsers.ElementAt(3);
+					var randomUsers = new IGuildUser[4];
+
+					try
+					{
+						channel2 = (Context.User as IVoiceState).VoiceChannel;
+						var vc = channel2 as SocketVoiceChannel;
+						var voiceUsers = vc.Users;
+
+						randomUsers[0] = voiceUsers.ElementAt(0);
+						randomUsers[1] = voiceUsers.ElementAt(1);
+						randomUsers[2] = voiceUsers.ElementAt(2);
+						randomUsers[3] = voiceUsers.ElementAt(3);
+					}
+					catch
+					{
+						var users = await Context.Guild.GetUsersAsync();
+						randomUsers[0] = users.ElementAt(rand.Next(0, users.Count));
+						randomUsers[1] = users.ElementAt(rand.Next(0, users.Count));
+						randomUsers[2] = users.ElementAt(rand.Next(0, users.Count));
+						randomUsers[3] = users.ElementAt(rand.Next(0, users.Count));
+					}
+
+					if (_user1 != null) randomUsers[0] = _user1;
+					if (_user2 != null) randomUsers[1] = _user2;
+					if (_user3 != null) randomUsers[2] = _user3;
+					if (_user4 != null) randomUsers[3] = _user4;
+
+					var core = new ImageCore.ImageCore();
+
+					var user1 = await core.StartStreamAsync(randomUsers[0]);
+					var user2 = await core.StartStreamAsync(randomUsers[1]);
+					var user3 = await core.StartStreamAsync(randomUsers[2]);
+					var user4 = await core.StartStreamAsync(randomUsers[3]);
+
+					var arrow = await core.StartStreamAsync(path: "./images/arrow.png");
+
+					var finalImg = new Image<Rgba32>(500, 500);
+
+					var size250 = new Size(250, 250);
+					var size500 = new Size(500, 500);
+
+					user1.Resize(size250);
+					user2.Resize(size250);
+					user3.Resize(size250);
+					user4.Resize(size250);
+
+					finalImg.DrawImage(user1, 1f, size250, new Point(0, 0));
+					finalImg.DrawImage(user2, 1f, size250, new Point(250, 0));
+					finalImg.DrawImage(user3, 1f, size250, new Point(0, 250));
+					finalImg.DrawImage(user4, 1f, size250, new Point(250, 250));
+
+					float dir = rand.Next(0, 360);
+					string winner = null;
+
+					if (dir > 270 && dir < 360) winner = randomUsers[0].Username;
+					if (dir > 0 && dir < 90) winner = randomUsers[1].Username;
+					if (dir > 90 && dir < 180) winner = randomUsers[3].Username;
+					if (dir > 180 && dir < 270) winner = randomUsers[2].Username;
+
+					if (winner == null) winner = "No one, try again";
+
+					arrow.Rotate(dir);
+
+					finalImg.DrawImage(arrow, 1f, size500, new Point(0, 0));
+
+					await core.StopStreamAsync(Context.Message, finalImg);
+
+					await Context.Channel.SendMessageAsync($"The spinner is pointing at **{winner}**");
+
+					await BotCooldown.Cooldown();
 				}
-				catch
+				else
 				{
-					var users = await Context.Guild.GetUsersAsync();
-					randomUsers[0] = users.ElementAt(rand.Next(0, users.Count));
-					randomUsers[1] = users.ElementAt(rand.Next(0, users.Count));
-					randomUsers[2] = users.ElementAt(rand.Next(0, users.Count));
-					randomUsers[3] = users.ElementAt(rand.Next(0, users.Count));
+					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
-
-				if (_user1 != null) randomUsers[0] = _user1;
-				if (_user2 != null) randomUsers[1] = _user2;
-				if (_user3 != null) randomUsers[2] = _user3;
-				if (_user4 != null) randomUsers[3] = _user4;
-
-				var core = new ImageCore.ImageCore();
-
-				var user1 = await core.StartStreamAsync(randomUsers[0]);
-				var user2 = await core.StartStreamAsync(randomUsers[1]);
-				var user3 = await core.StartStreamAsync(randomUsers[2]);
-				var user4 = await core.StartStreamAsync(randomUsers[3]);
-
-				var arrow = await core.StartStreamAsync(path: "./images/arrow.png");
-
-				var finalImg = new Image<Rgba32>(500, 500);
-
-				var size250 = new Size(250, 250);
-				var size500 = new Size(500, 500);
-
-				user1.Resize(size250);
-				user2.Resize(size250);
-				user3.Resize(size250);
-				user4.Resize(size250);
-
-				finalImg.DrawImage(user1, 1f, size250, new Point(0, 0));
-				finalImg.DrawImage(user2, 1f, size250, new Point(250, 0));
-				finalImg.DrawImage(user3, 1f, size250, new Point(0, 250));
-				finalImg.DrawImage(user4, 1f, size250, new Point(250, 250));
-
-				float dir = rand.Next(0, 360);
-				string winner = null;
-
-				if (dir > 270 && dir < 360) winner = randomUsers[0].Username;
-				if (dir > 0 && dir < 90) winner = randomUsers[1].Username;
-				if (dir > 90 && dir < 180) winner = randomUsers[3].Username;
-				if (dir > 180 && dir < 270) winner = randomUsers[2].Username;
-
-				if (winner == null) winner = "No one, try again";
-
-				arrow.Rotate(dir);
-
-				finalImg.DrawImage(arrow, 1f, size500, new Point(0, 0));
-
-				await core.StopStreamAsync(Context.Message, finalImg);
-
-				await Context.Channel.SendMessageAsync($"The spinner is pointing at **{winner}**");
-
-				await BotCooldown.Cooldown();
 			}
 			else
 			{
-				await ReplyAsync(BotCooldown.cooldownMsg);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.GamesNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 	}

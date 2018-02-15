@@ -11,7 +11,7 @@
 		/// <value>
 		///     The bot version.
 		/// </value>
-		public static string BotVersion = "1.8.4";
+		public static string BotVersion = "1.9.0";
 
 		/// <summary>
 		///     Contains the bots build revision
@@ -19,7 +19,7 @@
 		/// <value>
 		///     The build revision.
 		/// </value>
-		public static string BuildRevision = "3001181140_RB_184";
+		public static string BuildRevision = "1502181900_RB_190";
 
 		/// <summary>
 		///     Contains the bots author
@@ -35,7 +35,7 @@
 		/// <value>
 		///     The module count.
 		/// </value>
-		public static int ModuleCount = 6;
+		public static int ModuleCount = 8;
 
 		/// <summary>
 		///     Contains the bots databases

@@ -3,20 +3,7 @@
 A general purpose discord bot written by:
 - EnK_/zi8tx/TheRealDreamzy
 
-Current version: 1.8.3
+Current version: dev-1.9
 
 ----------
-# Following the progress
-
-I have a trello roadmap set-up for every single planned feature for this bot.
-
-You can find it over here: [Roadmap](https://trello.com/b/n15qy5We/rica-botpaw-roadmap)
-
-----------
-# Code of conduct:
-
-I do not allow any modifications neither to the code of my bot or it's ImageCore Library.
-
-DO NOT USE THE BOT AS YOUR OWN!
-
----------
+Please be aware that this branch only represents the current development state of the bot and that when 1.9 is released, it will get pushed onto the main branch as well as this one.

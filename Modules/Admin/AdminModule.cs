@@ -1,9 +1,12 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Newtonsoft.Json;
+using RicaBotpaw.Logging;
 using RicaBotpaw.Modules.Data;
 
 namespace RicaBotpaw.Modules.Admin
@@ -13,7 +16,7 @@ namespace RicaBotpaw.Modules.Admin
 	/// </summary>
 	/// <seealso cref="Discord.Commands.ModuleBase" />
 	[Remarks("This is the administrative module for server owners.")]
-	public class Admintools : ModuleBase
+	public class Admintools : ModuleBase // Exempt from configs
 	{
 		/// <summary>
 		///     The service
@@ -37,7 +40,7 @@ namespace RicaBotpaw.Modules.Admin
 		[Command("purge", RunMode = RunMode.Async)]
 		[Remarks("Clears the chat by a specified amount of messages.")]
 		[RequireUserPermission(GuildPermission.ManageMessages)]
-		public async Task purge([Remainder] int del = 0)
+		public async Task purge([Remainder] int msgToDelete = 0)
 		{
 			var Bot = await Context.Guild.GetUserAsync(Context.Client.CurrentUser.Id);
 			if (!Bot.GetPermissions(Context.Channel as ITextChannel).ManageMessages)
@@ -55,12 +58,12 @@ namespace RicaBotpaw.Modules.Admin
 				return;
 			}
 
-			if (del == null)
+			if (msgToDelete == null)
 				await Context.Channel.SendMessageAsync(
 					"`You need to specify the amount | ;clear (amount) | Replace (amount) with anything`");
 
 			var a = 0;
-			foreach (var Item in await Context.Channel.GetMessagesAsync(del).Flatten())
+			foreach (var Item in await Context.Channel.GetMessagesAsync(msgToDelete).Flatten())
 			{
 				a++;
 				await Item.DeleteAsync();
