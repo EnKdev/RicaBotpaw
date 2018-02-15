@@ -9,6 +9,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using RicaBotpaw.Modules.Data;
+using RicaBotpaw.TypeReaders;
 
 namespace RicaBotpaw
 {
@@ -66,6 +67,10 @@ namespace RicaBotpaw
 			_client = c;
 			_cmds = new CommandService();
 
+			// TypeReaders
+			_cmds.AddTypeReader<IGuild>(new RBGuildTypeReader<SocketGuild>()); // Thanks Tcb!
+
+			// Modules
 			await _cmds.AddModulesAsync(Assembly.GetEntryAssembly());
 
 			_client.MessageReceived += HandleCommand;
