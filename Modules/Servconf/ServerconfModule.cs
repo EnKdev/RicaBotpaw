@@ -10,6 +10,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using RicaBotpaw.Config;
+using RicaBotpaw.Logging;
 
 namespace RicaBotpaw.Modules
 {
@@ -25,7 +26,7 @@ namespace RicaBotpaw.Modules
 		[Command("conf", RunMode = RunMode.Async)]
 		[Remarks("Server Configurations!")]
 		[RequireUserPermission(GuildPermission.Administrator)]
-		public async Task Conf(int publicFlag, int economyFlag, int gamblingFlag, int pollFlag, int imagingFlag, int adminFlag, int gameFlag, [Remainder] IGuild g = null)
+		public async Task Conf(int publicFlag, int economyFlag, int gamblingFlag, int pollFlag, int imagingFlag, int gameFlag, [Remainder] IGuild g = null)
 		{
 			if (BotCooldown.isCooldownRunning == false)
 			{
@@ -38,7 +39,6 @@ namespace RicaBotpaw.Modules
 					{
 						Comment = "This contains the modules",
 						Guild = g.Id,
-						ModAdm = adminFlag,
 						ModGame = gameFlag,
 						ModImg = imagingFlag,
 						ModPub = publicFlag,
@@ -47,21 +47,21 @@ namespace RicaBotpaw.Modules
 						ModPubPoll = pollFlag
 					};
 
-					Config.ServerModulesConfig sMC = new ServerModulesConfig()
-					{
-						Comment = "This rconf file will store values for individual guilds. 1 = enabled, 0 = disabled",
-						Modules = mod
-					};
+					// Config.ServerModulesConfig sMC = new ServerModulesConfig()
+					// {
+					//	   Comment = "This rconf file will store values for individual guilds. 1 = enabled, 0 = disabled",
+					//	   Modules = mod
+					// };
 
-					if (File.Exists($"./serv_configs/{name}.rconf"))
-					{
-						File.Delete($"./serv_configs/{name}.rconf");
-					}
+					// if (File.Exists($"./serv_configs/{name}.rconf"))
+					// {
+					//	   File.Delete($"./serv_configs/{name}.rconf");
+					// }
 
 					using (StreamWriter file = File.CreateText($"./serv_configs/{name}.rconf"))
 					{
-						JsonSerializer ser = new JsonSerializer();
-						ser.Serialize(file, sMC);
+						var fileText = JsonConvert.SerializeObject(mod);
+						await file.WriteAsync(fileText);
 						await ReplyAsync($"Config file {name}.rconf created at /serv_configs");
 					}
 
@@ -72,6 +72,13 @@ namespace RicaBotpaw.Modules
 			{
 				await ReplyAsync(BotCooldown.cooldownMsg);
 			}
+		}
+
+		[Command("confhelp", RunMode = RunMode.Async)]
+		[Remarks("This is all new, you better read it!")]
+		public async Task ConfHelp()
+		{
+			await ReplyAsync(ModStrings.ConfigHelp);
 		}
 	}
 }

@@ -37,9 +37,6 @@ namespace RicaBotpaw.Config
 		[JsonProperty("mod_img")]
 		public long ModImg { get; set; }
 
-		[JsonProperty("mod_adm")]
-		public long ModAdm { get; set; }
-
 		[JsonProperty("mod_game")]
 		public long ModGame { get; set; }
 

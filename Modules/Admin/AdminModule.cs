@@ -1,9 +1,12 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Newtonsoft.Json;
+using RicaBotpaw.Logging;
 using RicaBotpaw.Modules.Data;
 
 namespace RicaBotpaw.Modules.Admin
@@ -13,7 +16,7 @@ namespace RicaBotpaw.Modules.Admin
 	/// </summary>
 	/// <seealso cref="Discord.Commands.ModuleBase" />
 	[Remarks("This is the administrative module for server owners.")]
-	public class Admintools : ModuleBase
+	public class Admintools : ModuleBase // Exempt from configs
 	{
 		/// <summary>
 		///     The service

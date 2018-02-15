@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Text;
 using RicaBotpaw.Modules.Data;
@@ -17,14 +15,7 @@ using Newtonsoft.Json.Linq;
 using RicaBotpaw.Config;
 using Newtonsoft.Json;
 using System.IO;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading;
-using System.Timers;
-using System.Xml;
-using System.Xml.Linq;
 using System.Xml.Serialization;
-using ImageSharp.Formats;
-using Newtonsoft.Json.Converters;
 using Urban.NET;
 
 namespace RicaBotpaw.Modules.Public
@@ -37,6 +28,7 @@ namespace RicaBotpaw.Modules.Public
 	public class Public : ModuleBase
 	{
 		private int modEnable;
+		private int gNoticeSent;
 
 		/// <summary>
 		/// The service
@@ -54,37 +46,30 @@ namespace RicaBotpaw.Modules.Public
 
 		private async Task CheckEnabledPublicModule([Remainder] IGuild g = null)
 		{
-			if (g == null)
+			if (g == null) g = Context.Guild;
+
+			if (!File.Exists($"./serv_configs/{g.Id.ToString()}_config.rconf"))
 			{
-				g = Context.Guild;
-
-				if (!File.Exists($"./serv_configs/{g.Id.ToString()}.rconf"))
-				{
-					await ReplyAsync(ModStrings.GuildNoConfigFile);
-				}
-				else
-				{
-					using (StreamReader file = File.OpenText($"./serv_configs/{g.Id.ToString()}.rconf"))
-					{
-						JsonSerializer ser = new JsonSerializer();
-						Config.Modules mods = (Config.Modules) ser.Deserialize(file, typeof(Config.Modules));
-
-						if (mods.Guild != g.Id)
-						{
-							await ReplyAsync(
-								"Specified Guild ID doesn't match saved Guild ID in config file."); // This should actually never happen
-						}
-						else if (mods.ModPub == 1)
-						{
-							modEnable = 1;
-						}
-						else // If it is not 1, but 2 or higher than 1 or even 0, then the module is disabled by default
-						{
-							modEnable = 0;
-						}
-					}
-				}
+				await ReplyAsync(ModStrings.GuildNoConfigFile);
+				gNoticeSent = 1;
+				return;
 			}
+
+			var fileText = File.ReadAllText($"./serv_configs/{g.Id.ToString()}_config.rconf");
+			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
+
+			if (mods.Guild != g.Id)
+			{
+				await ReplyAsync(
+					"Specified Guild ID doesn't match saved Guild ID in config file."); // This should actually never happen
+				return;
+			}
+			if (mods.ModPub == 1)
+			{
+				modEnable = 1;
+				return;
+			}
+			modEnable = 0;
 		}
 
 		/// <summary>
@@ -142,7 +127,15 @@ namespace RicaBotpaw.Modules.Public
 			}
 			else
 			{
-				await ReplyAsync(ModStrings.PublicNotEnabled);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.PublicNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -161,7 +154,7 @@ namespace RicaBotpaw.Modules.Public
 					var module = _service.Modules;
 					var emb = new EmbedBuilder();
 					emb.Color = new Color(114, 137, 218);
-					emb.Title = ($"Here is the information about all modules");
+					emb.Title = ("Here is the information about all modules");
 
 					foreach (var match in _service.Modules)
 					{
@@ -189,7 +182,15 @@ namespace RicaBotpaw.Modules.Public
 			}
 			else
 			{
-				await ReplyAsync(ModStrings.PublicNotEnabled);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.PublicNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -249,7 +250,15 @@ namespace RicaBotpaw.Modules.Public
 			}
 			else
 			{
-				await ReplyAsync(ModStrings.PublicNotEnabled);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.PublicNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -290,7 +299,15 @@ namespace RicaBotpaw.Modules.Public
 			}
 			else
 			{
-				await ReplyAsync(ModStrings.PublicNotEnabled);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.PublicNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -519,7 +536,15 @@ namespace RicaBotpaw.Modules.Public
 			}
 			else
 			{
-				await ReplyAsync(ModStrings.PublicNotEnabled);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.PublicNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -594,7 +619,15 @@ namespace RicaBotpaw.Modules.Public
 			}
 			else
 			{
-				await ReplyAsync(ModStrings.PublicNotEnabled);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.PublicNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -655,7 +688,15 @@ namespace RicaBotpaw.Modules.Public
 			}
 			else
 			{
-				await ReplyAsync(ModStrings.PublicNotEnabled);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.PublicNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -787,7 +828,15 @@ namespace RicaBotpaw.Modules.Public
 			}
 			else
 			{
-				await ReplyAsync(ModStrings.PublicNotEnabled);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.PublicNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -823,7 +872,15 @@ namespace RicaBotpaw.Modules.Public
 			}
 			else
 			{
-				await ReplyAsync(ModStrings.PublicNotEnabled);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.PublicNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -868,7 +925,15 @@ namespace RicaBotpaw.Modules.Public
 			}
 			else
 			{
-				await ReplyAsync(ModStrings.PublicNotEnabled);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.PublicNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -915,7 +980,15 @@ namespace RicaBotpaw.Modules.Public
 			}
 			else
 			{
-				await ReplyAsync(ModStrings.PublicNotEnabled);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.PublicNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -962,7 +1035,15 @@ namespace RicaBotpaw.Modules.Public
 			}
 			else
 			{
-				await ReplyAsync(ModStrings.PublicNotEnabled);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.PublicNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 
@@ -993,7 +1074,15 @@ namespace RicaBotpaw.Modules.Public
 			}
 			else
 			{
-				await ReplyAsync(ModStrings.PublicNotEnabled);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.PublicNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 	}

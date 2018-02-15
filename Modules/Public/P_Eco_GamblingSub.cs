@@ -20,6 +20,7 @@ namespace RicaBotpaw.Modules
 	public class P_Eco_GamblingSub : ModuleBase
 	{
 		private int featEnable;
+		private int gNoticeSent;
 
 		private CommandService _service;
 
@@ -29,40 +30,31 @@ namespace RicaBotpaw.Modules
 		}
 
 		private async Task CheckEnableFeatureModule([Remainder] IGuild g = null)
-		{ 
-			if (g == null)
+		{
+			if (g == null) g = Context.Guild;
+
+			if (!File.Exists($"./serv_configs/{g.Id.ToString()}_config.rconf"))
 			{
-				g = Context.Guild;
-
-				if (!File.Exists($"./serv_configs/{g.Id}.rconf"))
-				{
-					await ReplyAsync(ModStrings.GuildNoConfigFile);
-				}
-				else
-				{
-					using (StreamReader file = File.OpenText($"./serv_configs/{g.Id}.rconf"))
-					{
-						JsonSerializer ser = new JsonSerializer();
-						Config.Modules mods = (Config.Modules)ser.Deserialize(file, typeof(Config.Modules));
-
-						if (mods.Guild != g.Id)
-						{
-							await ReplyAsync("Specified Guild ID doesn't match saved Guild ID in config file."); // This should actually never happen
-						}
-						else
-						{
-							if (mods.ModPubEcoGmb == 1) // Check for the Feature to be enabled,
-							{
-								featEnable = 1;
-							}
-							else // If it is not 1, but 2 or higher than 1 or actually 0, then the module is disabled by default
-							{
-								featEnable = 0;
-							}
-						}
-					}
-				}
+				await ReplyAsync(ModStrings.GuildNoConfigFile);
+				gNoticeSent = 1;
+				return;
 			}
+
+			var fileText = File.ReadAllText($"./serv_configs/{g.Id.ToString()}_config.rconf");
+			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
+
+			if (mods.Guild != g.Id)
+			{
+				await ReplyAsync(
+					"Specified Guild ID doesn't match saved Guild ID in config file."); // This should actually never happen
+				return;
+			}
+			if (mods.ModPubEcoGmb == 1)
+			{
+				featEnable = 1;
+				return;
+			}
+			featEnable = 0;
 		}
 
 		/// <summary>
@@ -119,7 +111,15 @@ namespace RicaBotpaw.Modules
 			}
 			else
 			{
-				await ReplyAsync(ModStrings.GamblingNotEnabled);
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.GamblingNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
+				}
 			}
 		}
 	}
