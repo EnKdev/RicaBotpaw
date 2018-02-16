@@ -11,7 +11,7 @@
 		/// <value>
 		///     The bot version.
 		/// </value>
-		public static string BotVersion = "1.9.0";
+		public static string BotVersion = "1.9.1";
 
 		/// <summary>
 		///     Contains the bots build revision
@@ -19,7 +19,7 @@
 		/// <value>
 		///     The build revision.
 		/// </value>
-		public static string BuildRevision = "1502181900_RB_190";
+		public static string BuildRevision = "1602181245_RB_191";
 
 		/// <summary>
 		///     Contains the bots author
