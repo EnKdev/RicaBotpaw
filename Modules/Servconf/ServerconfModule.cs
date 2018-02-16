@@ -16,6 +16,14 @@ namespace RicaBotpaw.Modules
 {
 	public class ServerconfModule : ModuleBase
 	{
+		private long publicModule;
+		private long ecoFeatures;
+		private long gamblingFeatures;
+		private long pollFeatures;
+		private long imagingModule;
+		private long gameModule;
+		private ulong guild;
+
 		private CommandService _service;
 
 		public ServerconfModule(CommandService service)
@@ -79,6 +87,58 @@ namespace RicaBotpaw.Modules
 		public async Task ConfHelp()
 		{
 			await ReplyAsync(ModStrings.ConfigHelp);
+		}
+
+		[Command("modulecheck", RunMode = RunMode.Async)]
+		[Remarks("This checks the modules for a guild")]
+		public async Task ModCheck([Remainder] IGuild g = null)
+		{
+			if (BotCooldown.isCooldownRunning == false)
+			{
+				if (g == null)
+				{
+					g = Context.Guild;
+					var name = g.Id + "_config";
+
+					if (!File.Exists($"./serv_configs/{name}.rconf"))
+					{
+						await ReplyAsync(ModStrings.GuildNoConfigFile);
+						return;
+					}
+					
+					var fileText = File.ReadAllText($"./serv_configs/{name}.rconf");
+					var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
+
+					publicModule = mods.ModPub;
+					ecoFeatures = mods.ModPubEco;
+					gamblingFeatures = mods.ModPubEcoGmb;
+					pollFeatures = mods.ModPubPoll;
+					imagingModule = mods.ModImg;
+					gameModule = mods.ModGame;
+
+					EmbedBuilder embed = new EmbedBuilder
+					{
+						Color = new Color(15, 158, 120),
+						ThumbnailUrl = $"{g.IconUrl}",
+						Title = $"Modules enabled for Guild {g.Name} (Id: {g.Id})",
+						Description = "Short notice: 0 = disabled, 1 = enabled.\n" +
+						              $"Public Commands (PublicModule): {publicModule}\n" +
+						              $"Economy (EcoFeatures): {ecoFeatures}\n" +
+						              $"Gambling (GamblingFeatures): {gamblingFeatures}\n" +
+						              $"Polls (PollFeature): {pollFeatures}\n" +
+						              $"Imaging Commands (ImagingModule): {imagingModule}\n" +
+						              $"Game Commands (GamesModule) : {gameModule}"
+					};
+
+					await ReplyAsync("", false, embed);
+				}
+
+				await BotCooldown.Cooldown();
+			}
+			else
+			{
+				await ReplyAsync(BotCooldown.cooldownMsg);
+			}
 		}
 	}
 }
