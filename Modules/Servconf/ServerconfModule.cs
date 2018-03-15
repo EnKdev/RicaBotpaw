@@ -22,6 +22,9 @@ namespace RicaBotpaw.Modules
 		private long pollFeatures;
 		private long imagingModule;
 		private long gameModule;
+		private long nsfwFeatures;
+		private long sfwFeatures;
+		private long randImgFeatures;
 		private ulong guild;
 
 		private CommandService _service;
@@ -34,7 +37,7 @@ namespace RicaBotpaw.Modules
 		[Command("conf", RunMode = RunMode.Async)]
 		[Remarks("Server Configurations!")]
 		[RequireUserPermission(GuildPermission.Administrator)]
-		public async Task Conf(int publicFlag, int economyFlag, int gamblingFlag, int pollFlag, int imagingFlag, int gameFlag, [Remainder] IGuild g = null)
+		public async Task Conf(int publicFlag, int economyFlag, int gamblingFlag, int pollFlag, int imagingFlag, int gameFlag, int nsfwFlag, int sfwFlag, int randImgFlag, [Remainder] IGuild g = null)
 		{
 			if (BotCooldown.isCooldownRunning == false)
 			{
@@ -52,7 +55,10 @@ namespace RicaBotpaw.Modules
 						ModPub = publicFlag,
 						ModPubEco = economyFlag,
 						ModPubEcoGmb = gamblingFlag,
-						ModPubPoll = pollFlag
+						ModPubPoll = pollFlag,
+						ModNSFW = nsfwFlag,
+						ModSFW = sfwFlag,
+						ModRandImg = randImgFlag
 					};
 
 					// Config.ServerModulesConfig sMC = new ServerModulesConfig()
@@ -115,6 +121,10 @@ namespace RicaBotpaw.Modules
 					pollFeatures = mods.ModPubPoll;
 					imagingModule = mods.ModImg;
 					gameModule = mods.ModGame;
+					nsfwFeatures = mods.ModNSFW;
+					sfwFeatures = mods.ModSFW;
+					randImgFeatures = mods.ModRandImg;
+					
 
 					EmbedBuilder embed = new EmbedBuilder
 					{
@@ -127,7 +137,10 @@ namespace RicaBotpaw.Modules
 						              $"Gambling (GamblingFeatures): {gamblingFeatures}\n" +
 						              $"Polls (PollFeature): {pollFeatures}\n" +
 						              $"Imaging Commands (ImagingModule): {imagingModule}\n" +
-						              $"Game Commands (GamesModule) : {gameModule}"
+						              $"Game Commands (GamesModule): {gameModule}\n" +
+									  $"NSFW Image Searching (NSFWFeatures): {nsfwFeatures}\n" +
+									  $"SFW Image Searching (SFWFeatures): {sfwFeatures}\n" +
+									  $"Random Images (RandImgFeatures): {randImgFeatures}"
 					};
 
 					await ReplyAsync("", false, embed);

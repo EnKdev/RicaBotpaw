@@ -11,7 +11,7 @@
 		/// <value>
 		///     The bot version.
 		/// </value>
-		public static string BotVersion = "1.9.1";
+		public static string BotVersion = "2.0.0-pre1";
 
 		/// <summary>
 		///     Contains the bots build revision
@@ -19,7 +19,7 @@
 		/// <value>
 		///     The build revision.
 		/// </value>
-		public static string BuildRevision = "1602181245_RB_191";
+		public static string BuildRevision = "1503181920_RB_200pre1";
 
 		/// <summary>
 		///     Contains the bots author
@@ -35,13 +35,22 @@
 		/// <value>
 		///     The module count.
 		/// </value>
-		public static int ModuleCount = 8;
+		public static int MainModules = 4;
 
 		/// <summary>
-		///     Contains the bots databases
+		///		Contains the bots extensive module count
 		/// </summary>
 		/// <value>
-		///     The Database count
+		///		The extension module count.
+		/// </value>
+		public static int ExtensionModules = 5;
+
+
+		/// <summary>
+		/// Contains the bots databases
+		/// </summary>
+		/// <value>
+		/// The Database count
 		/// </value>
 		public static int BotDatabases = 1;
 	}

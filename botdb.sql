@@ -61,19 +61,6 @@ CREATE TABLE IF NOT EXISTS `pollvotes` (
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
 
 -- Daten Export vom Benutzer nicht ausgewählt
--- Exportiere Struktur von Tabelle vampdb.sonatable
-CREATE TABLE IF NOT EXISTS `sonatable` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` varchar(50) DEFAULT NULL,
-  `sonaname` varchar(50) DEFAULT NULL,
-  `age` int(11) NOT NULL,
-  `species` varchar(50) DEFAULT NULL,
-  `gender` varchar(50) DEFAULT NULL,
-  `sexuality` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
-
--- Daten Export vom Benutzer nicht ausgewählt
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IF(@OLD_FOREIGN_KEY_CHECKS IS NULL, 1, @OLD_FOREIGN_KEY_CHECKS) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

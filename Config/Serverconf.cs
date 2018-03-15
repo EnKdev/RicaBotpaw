@@ -5,15 +5,6 @@ using Newtonsoft.Json;
 
 namespace RicaBotpaw.Config
 {
-	public partial class ServerModulesConfig
-	{
-		[JsonProperty("_comment")]
-		public string Comment { get; set; }
-
-		[JsonProperty("modules")]
-		public Modules Modules { get; set; }
-	}
-
 	public partial class Modules
 	{
 		[JsonProperty("_comment")]
@@ -25,13 +16,13 @@ namespace RicaBotpaw.Config
 		[JsonProperty("mod_pub")]
 		public long ModPub { get; set; }
 
-		[JsonProperty("mod_pub_eco")]
+		[JsonProperty("feat_eco")]
 		public long ModPubEco { get; set; }
 
-		[JsonProperty("mod_pub_eco_gmb")]
+		[JsonProperty("feat_eco_gmb")]
 		public long ModPubEcoGmb { get; set; }
 
-		[JsonProperty("mod_pub_poll")]
+		[JsonProperty("feat_poll")]
 		public long ModPubPoll { get; set; }
 
 		[JsonProperty("mod_img")]
@@ -40,26 +31,13 @@ namespace RicaBotpaw.Config
 		[JsonProperty("mod_game")]
 		public long ModGame { get; set; }
 
-	}
+		[JsonProperty("feat_nsfw")]
+		public long ModNSFW { get; set; }
 
-	public partial class ServerModulesConfig
-	{
-		public static ServerModulesConfig FromJson(string json) =>
-			JsonConvert.DeserializeObject<ServerModulesConfig>(json, RicaBotpaw.Config.Converter.Settings);
-	}
+		[JsonProperty("feat_sfw")]
+		public long ModSFW { get; set; }
 
-	public static class Serialize
-	{
-		public static string ToJson(this ServerModulesConfig self) =>
-			JsonConvert.SerializeObject(self, RicaBotpaw.Config.Converter.Settings);
-	}
-
-	public class Converter
-	{
-		public static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
-		{
-			MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
-			DateParseHandling = DateParseHandling.None
-		};
+		[JsonProperty("feat_randimg")]
+		public long ModRandImg { get; set; }
 	}
 }

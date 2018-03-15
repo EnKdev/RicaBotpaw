@@ -209,78 +209,10 @@ namespace RicaBotpaw.Modules
 			}
 		}
 
-		/// <summary>
-		/// Part 1 of the payment process
-		/// </summary>
-		/// <param name="user">The user.</param>
-		/// <param name="moneyToStore">The money to store.</param>
-		/// <returns></returns>
-		[Command("store", RunMode = RunMode.Async)]
-		[Remarks("Part of the payment process.")]
-		public async Task StoreMoney(int moneyToStore, [Remainder] IUser user = null)
-		{
-			var g = Context.Guild as SocketGuild;
-			await CheckEnableFeatureModule(g);
-
-			if (featEnable == 1)
-			{
-				if (BotCooldown.isCooldownRunning == false)
-				{
-					if (user == null)
-					{
-						user = Context.User;
-
-						var _user = Database.CheckMoneyExistingUser(user);
-						var embedAuthor = new EmbedAuthorBuilder();
-
-						if (user == null)
-						{
-							user = Context.User;
-						}
-
-						if (_user.Count <= 0)
-						{
-							Database.cBank(user);
-						}
-						else
-						{
-							Database.StoreMoney(user, moneyToStore);
-
-							var embed = new EmbedBuilder()
-							{
-								Color = new Color(0, 0, 255),
-								Author = embedAuthor
-							};
-
-							embed.Title = $"{user} has stored {moneyToStore} Dollars into their vault";
-							embed.Description = "You may now send the amount of money you stored away to the user you want to pay.";
-
-							await ReplyAsync("", false, embed: embed);
-							await BotCooldown.Cooldown();
-						}
-					}
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
-				}
-			}
-			else
-			{
-				if (gNoticeSent == 0)
-				{
-					await ReplyAsync(ModStrings.EconomyNotEnabled);
-				}
-				else
-				{
-					gNoticeSent = 0;
-					return;
-				}
-			}
-		}
+		
 
 		/// <summary>
-		/// Part 2 of the payment process
+		/// the payment process
 		/// </summary>
 		/// <param name="payUser">The pay user.</param>
 		/// <param name="recieveUser">The recieve user.</param>
@@ -300,20 +232,11 @@ namespace RicaBotpaw.Modules
 					if (payUser == null)
 					{
 						payUser = Context.User;
-						var moneyDiscord = Database.GetUserMoney(Context.User);
-
-						if (moneyDiscord.FirstOrDefault().StoreMoney < money)
-						{
-							await ReplyAsync("You can't pay more than you have stored away, my friend");
-							await BotCooldown.Cooldown();
-						}
-						else
-						{
-							Database.PayMoney1(payUser, money);
-							Database.PayMoney2(recieveUser, money);
-							await ReplyAsync($"Successfully paid {recieveUser} {money} Dollars!");
-							await BotCooldown.Cooldown();
-						}
+						Database.PayMoney1(payUser, money);
+						Database.PayMoney2(recieveUser, money);
+						await ReplyAsync($"Successfully paid {recieveUser} {money} Dollars!");
+						await BotCooldown.Cooldown();
+						
 					}
 				}
 				else
@@ -395,5 +318,60 @@ namespace RicaBotpaw.Modules
 				}
 			}
 		}
+
+		[Command("work")]
+		[Remarks("Work work work work work...")]
+		public async Task Work([Remainder] IUser user = null)
+		{
+			var g = Context.Guild as SocketGuild;
+			await CheckEnableFeatureModule(g);
+
+			if (featEnable == 1)
+			{
+				if (BotCooldown.isCooldownRunning == false)
+				{
+					await ReplyAsync("This feature isn't implemented yet.");
+				}
+			}
+		}
+	}
+
+	public class EcoStrings
+	{
+		private string[] PositiveWorkResults = new string[]
+		{
+			"You work as a call supporter at Sony Online Entertainment and earn some money!",
+			"You work as a talent scout and earn some money!",
+			"You work as a police officer and earn some money!",
+			"You work at McDonalds. Not the best place, but you earn some money."
+		};
+
+		private string[] NegativeWorkResults = new string[]
+		{
+			"You tried to work as a call supporter at SOE, but you failed miserably as you accidently used the telephone and fangirled over Hideo Kojima when he was calling.",
+			"You tried to work as a talent scout but everything you did was just getting a rock you proclaimed that it could sing.",
+			"You tried to work as a police officer, but the temptation was just too great and you indirectly caused 9/11",
+			"You tried to work at McDonalds but secretly you made tweets on the Account of Wendy's. Management has fired you then."
+		};
+
+		private string[] PositiveCrimeResults = new string[]
+		{
+			// Placeholder
+		};
+
+		private string[] NegativeCrimeResults = new string[]
+		{
+			// Placeholder
+		};
+
+		private string[] PositiveOtherResults = new string[]
+		{
+			// Placeholder
+		};
+
+		private string[] NegativeOtherResults = new string[]
+		{
+			// Placeholder
+		};
 	}
 }

@@ -17,14 +17,14 @@ using RicaBotpaw.Modules.Data;
 
 namespace RicaBotpaw.Modules
 {
-	public class P_Eco_GamblingSub : ModuleBase
+	public class Gambling : ModuleBase
 	{
 		private int featEnable;
 		private int gNoticeSent;
 
 		private CommandService _service;
 
-		public P_Eco_GamblingSub(CommandService service)
+		public Gambling(CommandService service)
 		{
 			_service = service;
 		}
