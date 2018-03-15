@@ -61,7 +61,7 @@ namespace RicaBotpaw.Modules.Public
 			if (mods.Guild != g.Id)
 			{
 				await ReplyAsync(
-					"Specified Guild ID doesn't match saved Guild ID in config file."); // This should actually never happen
+					"Specified Guild ID doesn't match saved Guild ID in config file."); // This should actually never happen unless you specified another guild... however that would work.
 				return;
 			}
 			if (mods.ModPub == 1)
@@ -311,35 +311,10 @@ namespace RicaBotpaw.Modules.Public
 			}
 		}
 
-		[Command("stop", RunMode = RunMode.Async)]
-		[Remarks("Stops the bot. For updating processes.")]
-		public async Task StopTask() // Exempt from the configurations since it is a dev command
-		{
-			if (BotCooldown.isCooldownRunning == false)
-			{
-				if (!(Context.User.Id == 112559794543468544))
-				{
-					await Context.Channel.SendMessageAsync(
-						"You are unable to stop the bot. Only EnK_ can stop the bot.");
-					await BotCooldown.Cooldown();
-				}
-				else
-				{
-					await Context.Channel.SendMessageAsync(
-						"Good bye!");
-					Environment.Exit(0);
-				}
-			}
-			else
-			{
-				await ReplyAsync(BotCooldown.cooldownMsg);
-			}
-		}
-
-		[Command("dstop", RunMode = RunMode.Async)]
-		[Remarks("The dev stop")]
+		[Command("devlog", RunMode = RunMode.Async)]
+		[Remarks("Generates a devlog before the bot gets shutdown in the terminal line")]
 		public async Task
-			DevStop(string logId, int caseIdentifier,
+			Devstop(string logId, int caseIdentifier,
 				[Remainder] string reason = null) // Exempt from the configurations since it is a dev command
 		{
 			if (BotCooldown.isCooldownRunning == false)
@@ -387,6 +362,7 @@ namespace RicaBotpaw.Modules.Public
 						ser1.Serialize(file1, sReason1);
 						await ReplyAsync($"XML LogFile {logFileName}.rblog.xml created in /logs");
 					}
+
 					Environment.Exit(0);
 				}
 			}
@@ -416,8 +392,6 @@ namespace RicaBotpaw.Modules.Public
 					{
 						var embed = new EmbedBuilder();
 						var application = await Context.Client.GetApplicationInfoAsync();
-						var weekCount = 0;
-						var dayCount = 0;
 						embed.ImageUrl = application.IconUrl;
 						embed.WithColor(new Color(0x4900ff))
 							// Generic Information
@@ -433,12 +407,6 @@ namespace RicaBotpaw.Modules.Public
 								var time = DateTime.Now - process.StartTime;
 								var sb = new StringBuilder();
 
-								if (time.Days > 7)
-								{
-									weekCount++;
-									sb.Append($"{weekCount}w ");
-									dayCount = 0;
-								}
 								if (time.Days > 0)
 								{
 									sb.Append($"{time.Days}d ");
@@ -490,8 +458,14 @@ namespace RicaBotpaw.Modules.Public
 							})
 							.AddField(y =>
 							{
-								y.Name = "RB Modules";
-								y.Value = RBConfig.ModuleCount;
+								y.Name = "RB Main Modules";
+								y.Value = RBConfig.MainModules;
+								y.IsInline = true;
+							})
+							.AddField(y =>
+							{
+								y.Name = "RB Extensions";
+								y.Value = RBConfig.ExtensionModules;
 								y.IsInline = true;
 							})
 							.AddField(y =>
@@ -514,6 +488,12 @@ namespace RicaBotpaw.Modules.Public
 							})
 							.AddField(y =>
 							{
+								y.Name = "Running on";
+								y.Value = System.Environment.OSVersion.VersionString + " (" + System.Runtime.InteropServices.RuntimeInformation.OSDescription + ")";
+								y.IsInline = false;
+							})
+							.AddField(y =>
+							{
 								y.Name = "Members";
 								y.Value = (Context.Client as DiscordSocketClient).Guilds.Sum(g => g.Users.Count).ToString();
 								y.IsInline = false;
@@ -522,6 +502,13 @@ namespace RicaBotpaw.Modules.Public
 							{
 								y.Name = "Channels";
 								y.Value = (Context.Client as DiscordSocketClient).Guilds.Sum(g => g.Channels.Count).ToString();
+								y.IsInline = false;
+							})
+							.AddField(y =>
+							{
+								y.Name = "Support me over PayPal!";
+								y.Value =
+									"If you want me being able to keep this project alive, then you can do so [here!](https://paypal.me/zi8tx) Any amount can help!";
 								y.IsInline = false;
 							});
 
@@ -938,61 +925,6 @@ namespace RicaBotpaw.Modules.Public
 		}
 
 		/// <summary>
-		/// Random cat!
-		/// </summary>
-		/// <returns></returns>
-		[Command("cat", RunMode = RunMode.Async)]
-		[Remarks("Sends you a random cat.")]
-		public async Task Cat()
-		{
-			var g = Context.Guild as SocketGuild;
-			await CheckEnabledPublicModule(g);
-
-			if (modEnable == 1)
-			{
-				if (BotCooldown.isCooldownRunning == false)
-				{
-					Console.WriteLine("Making API Call...");
-					using (var client = new HttpClient(new HttpClientHandler
-					{
-						AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-					}))
-					{
-						string websiteUrl = "http://random.cat/meow";
-						client.BaseAddress = new Uri(websiteUrl);
-
-						HttpResponseMessage res = client.GetAsync("").Result;
-						res.EnsureSuccessStatusCode();
-
-						string result = await res.Content.ReadAsStringAsync();
-						var json = JObject.Parse(result);
-
-						string CatImage = json["file"].ToString();
-
-						await ReplyAsync(CatImage);
-						await BotCooldown.Cooldown();
-					}
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
-				}
-			}
-			else
-			{
-				if (gNoticeSent == 0)
-				{
-					await ReplyAsync(ModStrings.PublicNotEnabled);
-				}
-				else
-				{
-					gNoticeSent = 0;
-					return;
-				}
-			}
-		}
-
-		/// <summary>
 		/// Gets the best urban definition based on the term the user has given.
 		/// </summary>
 		/// <param name="term">The term.</param>
@@ -1019,52 +951,14 @@ namespace RicaBotpaw.Modules.Public
 					{
 						Color = new Color(60, 133, 150)
 					};
-
+					
 					embed.Title = $"Urban Definiton for {term}";
 					embed.Description =
 					($"{def}\n------------\nExample:\n{ex}\n-----------\nThis Urban Defintion has received {tUp} :thumbsup: and {tDown} :thumbsdown:"
 					);
+					
 
 					await ReplyAsync("", false, embed: embed);
-					await BotCooldown.Cooldown();
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
-				}
-			}
-			else
-			{
-				if (gNoticeSent == 0)
-				{
-					await ReplyAsync(ModStrings.PublicNotEnabled);
-				}
-				else
-				{
-					gNoticeSent = 0;
-					return;
-				}
-			}
-		}
-
-
-		/// <summary>
-		/// If someone actually is going to donate.
-		/// </summary>
-		/// <returns></returns>
-		[Command("donate", RunMode = RunMode.Async)]
-		[Remarks("If you want to show your support, then do it with this!")]
-		public async Task Donate()
-		{
-			var g = Context.Guild as SocketGuild;
-			await CheckEnabledPublicModule(g);
-
-			if (modEnable == 1)
-			{
-				if (BotCooldown.isCooldownRunning == false)
-				{
-					await ReplyAsync(
-						"If you want to show your support to EnK_ for making me, you can do it over paypal!\nAny amount is accepted (Except an amount of 0) and will greatly help him in keeping this project running!\nYou can donate to him here: https://www.paypal.me/zi8tx");
 					await BotCooldown.Cooldown();
 				}
 				else

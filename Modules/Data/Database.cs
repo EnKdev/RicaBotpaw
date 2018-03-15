@@ -444,7 +444,7 @@ namespace RicaBotpaw.Modules.Data
 			try
 			{
 				var strings =
-					$"UPDATE `moneydiscord` SET storeMoney = storeMoney + {money}, money = money - {money} WHERE user_id = {user.Id}";
+					$"UPDATE `moneydiscord` SET money - {money} WHERE user_id = {user.Id}";
 				var reader = database.FireCommand(strings);
 				reader.Close();
 				database.CloseConnection();
