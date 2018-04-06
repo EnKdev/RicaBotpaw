@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
-using RicaBotpaw;
 using RicaBotpaw.Logging;
 using Discord;
 using System.IO;

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Net;
-using System.Collections.Generic;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace RicaBotpaw.Config
 {
@@ -39,5 +36,8 @@ namespace RicaBotpaw.Config
 
 		[JsonProperty("feat_randimg")]
 		public long ModRandImg { get; set; }
+
+		[JsonProperty("feat_hash")]
+		public long ModHash { get; set; }
 	}
 }

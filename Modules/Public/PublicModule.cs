@@ -7,11 +7,7 @@ using Discord.WebSocket;
 using System.Diagnostics;
 using System.Text;
 using RicaBotpaw.Modules.Data;
-using RicaBotpaw.ImageCore;
 using RicaBotpaw.Logging;
-using System.Net;
-using System.Net.Http;
-using Newtonsoft.Json.Linq;
 using RicaBotpaw.Config;
 using Newtonsoft.Json;
 using System.IO;
@@ -430,18 +426,6 @@ namespace RicaBotpaw.Modules.Public
 							{
 								y.Name = "Discord.NET Version";
 								y.Value = DiscordConfig.Version;
-								y.IsInline = true;
-							})
-							.AddField(y =>
-							{
-								y.Name = "RBIC Version";
-								y.Value = ImageCoreConfig.Version;
-								y.IsInline = true;
-							})
-							.AddField(y =>
-							{
-								y.Name = "RBIC Build Revision";
-								y.Value = ImageCoreConfig.BuildRevision;
 								y.IsInline = true;
 							})
 							.AddField(y =>

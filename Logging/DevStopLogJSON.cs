@@ -1,7 +1,4 @@
-﻿using System;
-using System.Net;
-using System.Collections.Generic;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace RicaBotpaw.Logging
 {

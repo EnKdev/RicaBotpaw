@@ -1,31 +1,11 @@
-﻿**__Rica Botpaw - Version 1.9.0__**
+﻿**__Rica Botpaw - Version 2.0.0-pre2__**
 ---------------------------
-Alright folks, i guess this is finally it!
-Version 1.9 just dropped and it's big!
-There is also a breaking change now except for the developer commands and the moderation tools. More detailed specifics down below.
-
-I also want to mention that this is the first Update i didn't do myself alone due to it's size.
-I want to thank AntiTcb, SystemWizard and Still for their help over at the Discord API Server for many things.
-You guys rock and without you, this update wouldn't exist.
+- Fixed an issue with image related features by deprecating the ImageCore Standalone Library and porting it into the project itself.
+- Added some hashing functionalities. This also added a new feature which has to be enabled with the ;conf command.
+-- As always, the help about configuring is called with ;confhelp
 ---------------------------
-**__Changelog:__**
-
-__Functionality:__
-
--New Developer Utilities: In case the bot has to go down, EnK_ can log the cause locally on the VPS.
-
--Customizable Server Configurations
---You can create a config file now the bot uses to behave differently on your guild as it used to do.
---This is the breaking change and it is now mandatory for you to create it if you wish to maintain the interactivity on your server.
----Available modules to activate/deactivate: Public Features, Economy, Polls, Gambling, Imaging, Games. (More to come in the future)
----PLEASE NOTICE: Please use only a 0 or a 1 in order to disable/enable a module or a feature.
-
-__Code base:__
--Split the PublicModule.cs file into three more files: P_EconomySub.cs (Economy features), P_PollSub.cs (Poll features) and P_Eco_GamblingSub.cs (Gambling features).
--Created and added a CustomTypeReader for the IGuild/SocketGuild Interface/Class which is a part of Discord.NET
--Added DevStopLogJSON.cs, DevStopLogXML.cs, ModStrings.cs, Serverconf.cs, ServerconfigModules.cs, RBGuildTypeReader.cs, P_EconomySub.cs, P_PollSub.cs and P_Eco_GamblingSub.cs codefiles to the project.
----------------------------
-**__Summary:__**
-Files added: 9,
-Total Worktime: Around 7-10 hours,
-Amount of stress this update caused: I'd say too much stress.
+**Future plans:**
++ Add signing functionalities (I might sound dumb with that plan)
++ Add encrypting/decrypting functionalities (Also might sound dumb with that plan)
++ Simplify Server Configurations
++ Add some hash modifiers (Inflate, GZip, Salt, BCrypt)

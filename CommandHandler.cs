@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Timers;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using RicaBotpaw.Modules.Data;
 using RicaBotpaw.TypeReaders;
 
 namespace RicaBotpaw

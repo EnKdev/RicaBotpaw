@@ -6,9 +6,9 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using ImageSharp;
-using RicaBotpaw.Modules.Data;
 using SixLabors.Primitives;
 using Newtonsoft.Json;
+using RicaBotpaw.Libs;
 using RicaBotpaw.Logging;
 
 namespace RicaBotpaw.Modules.Games
@@ -401,7 +401,7 @@ namespace RicaBotpaw.Modules.Games
 					if (_user3 != null) randomUsers[2] = _user3;
 					if (_user4 != null) randomUsers[3] = _user4;
 
-					var core = new ImageCore.ImageCore();
+					var core = new ImageCore();
 
 					var user1 = await core.StartStreamAsync(randomUsers[0]);
 					var user2 = await core.StartStreamAsync(randomUsers[1]);

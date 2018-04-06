@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Mime;
+﻿using System.IO;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
-using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using RicaBotpaw.Config;
 using RicaBotpaw.Logging;
 
 namespace RicaBotpaw.Modules
@@ -25,6 +18,7 @@ namespace RicaBotpaw.Modules
 		private long nsfwFeatures;
 		private long sfwFeatures;
 		private long randImgFeatures;
+		private long hashFeatures;
 		private ulong guild;
 
 		private CommandService _service;
@@ -37,7 +31,7 @@ namespace RicaBotpaw.Modules
 		[Command("conf", RunMode = RunMode.Async)]
 		[Remarks("Server Configurations!")]
 		[RequireUserPermission(GuildPermission.Administrator)]
-		public async Task Conf(int publicFlag, int economyFlag, int gamblingFlag, int pollFlag, int imagingFlag, int gameFlag, int nsfwFlag, int sfwFlag, int randImgFlag, [Remainder] IGuild g = null)
+		public async Task Conf(int publicFlag, int economyFlag, int gamblingFlag, int pollFlag, int imagingFlag, int gameFlag, int nsfwFlag, int sfwFlag, int randImgFlag, int hashFlag, [Remainder] IGuild g = null)
 		{
 			if (BotCooldown.isCooldownRunning == false)
 			{
@@ -58,7 +52,8 @@ namespace RicaBotpaw.Modules
 						ModPubPoll = pollFlag,
 						ModNSFW = nsfwFlag,
 						ModSFW = sfwFlag,
-						ModRandImg = randImgFlag
+						ModRandImg = randImgFlag,
+						ModHash = hashFlag
 					};
 
 					// Config.ServerModulesConfig sMC = new ServerModulesConfig()
@@ -124,6 +119,7 @@ namespace RicaBotpaw.Modules
 					nsfwFeatures = mods.ModNSFW;
 					sfwFeatures = mods.ModSFW;
 					randImgFeatures = mods.ModRandImg;
+					hashFeatures = mods.ModHash;
 					
 
 					EmbedBuilder embed = new EmbedBuilder
@@ -140,7 +136,8 @@ namespace RicaBotpaw.Modules
 						              $"Game Commands (GamesModule): {gameModule}\n" +
 									  $"NSFW Image Searching (NSFWFeatures): {nsfwFeatures}\n" +
 									  $"SFW Image Searching (SFWFeatures): {sfwFeatures}\n" +
-									  $"Random Images (RandImgFeatures): {randImgFeatures}"
+									  $"Random Images (RandImgFeatures): {randImgFeatures}\n" +
+									  $"Hashing Features (HashFeatures): {hashFeatures}"
 					};
 
 					await ReplyAsync("", false, embed);

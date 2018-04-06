@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using Discord;
 using MySql.Data.MySqlClient;
 
@@ -519,47 +518,6 @@ namespace RicaBotpaw.Modules.Data
 			var table = database.FireCommand(str);
 
 			database.CloseConnection();
-		}
-
-		/// <summary>
-		///     Gets info about your fursona
-		/// </summary>
-		/// <param name="user">The user.</param>
-		/// <returns></returns>
-		public static List<sonatable> GetSona(IUser user)
-		{
-			var result = new List<sonatable>();
-
-			var database = new Database("vampdb");
-
-			var str = string.Format("SELECT * FROM `sonatable` WHERE user_id = '{0}'", user.Id);
-			var tableName = database.FireCommand(str);
-
-			while (tableName.Read())
-			{
-				var userId = (string) tableName["user_id"];
-				var sName = (string) tableName["sonaname"];
-				var nSName = sName.Replace("_", " ");
-				var age = (int) tableName["age"];
-				var spec = (string) tableName["species"];
-				var nSpec = spec.Replace("_", " ");
-				var gend = (string) tableName["gender"];
-				var sex = (string) tableName["sexuality"];
-				var nSex = sex.Replace("_", " ");
-
-				result.Add(new sonatable
-				{
-					UserId = userId,
-					SonaName = nSName,
-					Age = age,
-					Species = nSpec,
-					Gender = gend,
-					Sexuality = nSex
-				});
-			}
-			database.CloseConnection();
-
-			return result;
 		}
 
 		// Polls

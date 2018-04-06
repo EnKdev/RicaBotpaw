@@ -1,13 +1,8 @@
 ﻿using System;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Newtonsoft.Json;
-using RicaBotpaw.Logging;
-using RicaBotpaw.Modules.Data;
 
 namespace RicaBotpaw.Modules.Admin
 {

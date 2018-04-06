@@ -3,26 +3,16 @@
 // This is to split the image module into files so that the subclasses have their own file.
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using System.Diagnostics;
-using System.Text;
-using RicaBotpaw.Modules.Data;
-using RicaBotpaw.ImageCore;
 using RicaBotpaw.Logging;
 using System.Net;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
-using RicaBotpaw.Config;
 using Newtonsoft.Json;
 using System.IO;
-using System.Xml.Serialization;
-using MySql.Data.MySqlClient.Authentication;
-using RicaBotpaw;
-using Urban.NET;
 
 namespace RicaBotpaw.Modules.Image
 {
