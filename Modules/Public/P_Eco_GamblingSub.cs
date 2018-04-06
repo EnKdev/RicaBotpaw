@@ -11,7 +11,6 @@ using Newtonsoft.Json;
 using RicaBotpaw.Logging;
 using System;
 using System.Linq;
-using System.Threading;
 using Discord.WebSocket;
 using RicaBotpaw.Modules.Data;
 

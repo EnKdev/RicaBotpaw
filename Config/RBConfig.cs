@@ -11,7 +11,7 @@
 		/// <value>
 		///     The bot version.
 		/// </value>
-		public static string BotVersion = "2.0.0-pre1";
+		public static string BotVersion = "2.0.0-pre1.2";
 
 		/// <summary>
 		///     Contains the bots build revision
@@ -19,7 +19,7 @@
 		/// <value>
 		///     The build revision.
 		/// </value>
-		public static string BuildRevision = "1503181920_RB_200pre1";
+		public static string BuildRevision = "0604180900_RB_200pre12";
 
 		/// <summary>
 		///     Contains the bots author
@@ -35,7 +35,7 @@
 		/// <value>
 		///     The module count.
 		/// </value>
-		public static int MainModules = 4;
+		public static int MainModules = 5;
 
 		/// <summary>
 		///		Contains the bots extensive module count

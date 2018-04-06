@@ -241,15 +241,19 @@ namespace RicaBotpaw.Modules
 				}
 				else
 				{
-					if (gNoticeSent == 0)
-					{
-						await ReplyAsync(ModStrings.EconomyNotEnabled);
-					}
-					else
-					{
-						gNoticeSent = 0;
-						return;
-					}
+					await ReplyAsync(BotCooldown.cooldownMsg);
+				}
+			}
+			else
+			{
+				if (gNoticeSent == 0)
+				{
+					await ReplyAsync(ModStrings.EconomyNotEnabled);
+				}
+				else
+				{
+					gNoticeSent = 0;
+					return;
 				}
 			}
 		}
@@ -318,60 +322,6 @@ namespace RicaBotpaw.Modules
 				}
 			}
 		}
-
-		[Command("work")]
-		[Remarks("Work work work work work...")]
-		public async Task Work([Remainder] IUser user = null)
-		{
-			var g = Context.Guild as SocketGuild;
-			await CheckEnableFeatureModule(g);
-
-			if (featEnable == 1)
-			{
-				if (BotCooldown.isCooldownRunning == false)
-				{
-					await ReplyAsync("This feature isn't implemented yet.");
-				}
-			}
-		}
 	}
 
-	public class EcoStrings
-	{
-		private string[] PositiveWorkResults = new string[]
-		{
-			"You work as a call supporter at Sony Online Entertainment and earn some money!",
-			"You work as a talent scout and earn some money!",
-			"You work as a police officer and earn some money!",
-			"You work at McDonalds. Not the best place, but you earn some money."
-		};
-
-		private string[] NegativeWorkResults = new string[]
-		{
-			"You tried to work as a call supporter at SOE, but you failed miserably as you accidently used the telephone and fangirled over Hideo Kojima when he was calling.",
-			"You tried to work as a talent scout but everything you did was just getting a rock you proclaimed that it could sing.",
-			"You tried to work as a police officer, but the temptation was just too great and you indirectly caused 9/11",
-			"You tried to work at McDonalds but secretly you made tweets on the Account of Wendy's. Management has fired you then."
-		};
-
-		private string[] PositiveCrimeResults = new string[]
-		{
-			// Placeholder
-		};
-
-		private string[] NegativeCrimeResults = new string[]
-		{
-			// Placeholder
-		};
-
-		private string[] PositiveOtherResults = new string[]
-		{
-			// Placeholder
-		};
-
-		private string[] NegativeOtherResults = new string[]
-		{
-			// Placeholder
-		};
-	}
 }

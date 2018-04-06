@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -10,7 +9,7 @@ using ImageSharp.Dithering;
 using ImageSharp.Processing;
 using Newtonsoft.Json;
 using RicaBotpaw.Logging;
-using RicaBotpaw.Modules.Data;
+using RicaBotpaw.Libs;
 
 namespace RicaBotpaw.Modules.Image
 {
@@ -113,7 +112,6 @@ namespace RicaBotpaw.Modules.Image
 		/// <returns></returns>
 		public async Task flipImage(int degrees, string url) // We don't need to call the cooldown here as it is no command but just the framework behind the flipping command
 		{
-
 			if (degrees <= 0)
 			{
 				await ReplyAsync("Please specify a value greater than 0");
@@ -128,14 +126,14 @@ namespace RicaBotpaw.Modules.Image
 			}
 			else if (url == null)
 			{
-				var core = new ImageCore.ImageCore();
+				var core = new ImageCore();
 				var img = await core.StartStreamAsync(Context.User);
 				img.Rotate(degrees);
 				await core.StopStreamAsync(Context.Message, img);
 			}
 			else
 			{
-				var core = new ImageCore.ImageCore();
+				var core = new ImageCore();
 				var img = await core.StartStreamAsync(Context.User, url);
 				img.Rotate(degrees);
 				await core.StopStreamAsync(Context.Message, img);
@@ -162,7 +160,7 @@ namespace RicaBotpaw.Modules.Image
 				{
 					var task = Task.Run(async () =>
 					{
-						var core = new ImageCore.ImageCore();
+						var core = new ImageCore();
 						Image<Rgba32> img = null;
 
 						if (filter != "help")

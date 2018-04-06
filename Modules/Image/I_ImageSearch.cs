@@ -3,26 +3,16 @@
 // This is to split the image module into files so that the subclasses have their own file.
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using System.Diagnostics;
-using System.Text;
-using RicaBotpaw.Modules.Data;
-using RicaBotpaw.ImageCore;
 using RicaBotpaw.Logging;
 using System.Net;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
-using RicaBotpaw.Config;
 using Newtonsoft.Json;
 using System.IO;
-using System.Xml.Serialization;
-using MySql.Data.MySqlClient.Authentication;
-using RicaBotpaw;
-using Urban.NET;
 
 namespace RicaBotpaw.Modules.Image
 {
@@ -38,6 +28,8 @@ namespace RicaBotpaw.Modules.Image
 		private int modEnableNSFW;
 		private int modEnableSFW;
 		private int gNoticeSent;
+		private int maxTries1;
+		private int maxTries2;
 
 		private async Task CheckNSFWFeatureEnabled([Remainder] IGuild g = null)
 		{
@@ -121,7 +113,7 @@ namespace RicaBotpaw.Modules.Image
 							return;
 						}
 
-						client.DefaultRequestHeaders.Add("User-Agent", "RicaBotpaw/2.0.0-pre1 (by EnK_ on e621)");
+						client.DefaultRequestHeaders.Add("User-Agent", "RicaBotpaw/2.0.1-pre1 (by EnK_ on e621)");
 						string websiteUrl = "https://e621.net/post/index.json?tags=" + input + "%20order:random+rating:e&limit=1";
 						client.BaseAddress = new Uri(websiteUrl);
 						HttpResponseMessage res = client.GetAsync("").Result;
@@ -139,13 +131,24 @@ namespace RicaBotpaw.Modules.Image
 							if (Tags.Contains("bestiality") || Tags.Contains("cub") || Tags.Contains("child") || Tags.Contains("equine") ||
 							    Tags.Contains("feral") || Tags.Contains("gumball") || Tags.Contains("horse") || Tags.Contains("human") ||
 							    Tags.Contains("jasonafex") || Tags.Contains("jay_naylor") || Tags.Contains("manyakis") ||
-							    Tags.Contains("micro_on_macro") || Tags.Contains("my_little_pony") || Tags.Contains("peeing") ||
+							    Tags.Contains("micro_on_macro") || Tags.Contains("my_little_pony") || Tags.Contains("mlp") || Tags.Contains("peeing") ||
 							    Tags.Contains("rating:safe") || Tags.Contains("r34") || Tags.Contains("scat") ||
 							    Tags.Contains("size_difference") || Tags.Contains("type:swf") || Tags.Contains("vore") ||
 							    Tags.Contains("watersports")) // Restricted tags
 							{
-								await Context.Channel.SendMessageAsync("Generated an invalid image, please wait while we're retrying...");
-								goto GetImage;
+								if (maxTries1 >= 5)
+								{
+									await Context.Channel.SendMessageAsync(
+										"Maximum tries exceeded. Please try again with a different queue or tags");
+									maxTries1 = 0;
+									return;
+								}
+								else
+								{
+									maxTries1++;
+									await Context.Channel.SendMessageAsync("Generated an invalid image, please wait while we're retrying...");
+									goto GetImage;
+								}
 							}
 
 							var msg = await user.GetOrCreateDMChannelAsync();
@@ -199,6 +202,7 @@ namespace RicaBotpaw.Modules.Image
 			var ch = Context.Channel as SocketChannel;
 			var g = Context.Guild as SocketGuild;
 			await CheckSFWFeatureEnabled(g);
+			var maxTries = 0;
 
 			if (modEnableSFW == 1)
 			{
@@ -216,7 +220,7 @@ namespace RicaBotpaw.Modules.Image
 							return;
 						}
 
-						client.DefaultRequestHeaders.Add("User-Agent", "RicaBotpaw/2.0.0-pre1 (by EnK_ on e621)");
+						client.DefaultRequestHeaders.Add("User-Agent", "RicaBotpaw/2.0.1-pre1 (by EnK_ on e621)");
 						string websiteUrl = "https://e926.net/post/index.json?tags=" + input + "%20order:random&limit=1";
 						client.BaseAddress = new Uri(websiteUrl);
 						HttpResponseMessage res = client.GetAsync("").Result;
@@ -234,13 +238,24 @@ namespace RicaBotpaw.Modules.Image
 							if (Tags.Contains("bestiality") || Tags.Contains("cub") || Tags.Contains("child") || Tags.Contains("equine") ||
 								Tags.Contains("feral") || Tags.Contains("gumball") || Tags.Contains("horse") || Tags.Contains("human") ||
 								Tags.Contains("jasonafex") || Tags.Contains("jay_naylor") || Tags.Contains("manyakis") ||
-								Tags.Contains("micro_on_macro") || Tags.Contains("my_little_pony") || Tags.Contains("peeing") ||
+								Tags.Contains("micro_on_macro") || Tags.Contains("my_little_pony") || Tags.Contains("mlp") || Tags.Contains("peeing") ||
 								Tags.Contains("rating:safe") || Tags.Contains("r34") || Tags.Contains("scat") ||
 								Tags.Contains("size_difference") || Tags.Contains("sex") || Tags.Contains("type:swf") || Tags.Contains("vore") ||
 								Tags.Contains("watersports")) // Restricted tags
 							{
-								await Context.Channel.SendMessageAsync("Generated an invalid image, please wait while we're retrying...");
-								goto GetImage;
+								if (maxTries2 >= 5)
+								{
+									await Context.Channel.SendMessageAsync(
+										"Maximum tries exceeded. Please try again with a different queue or tags");
+									maxTries2 = 0;
+									return;
+								}
+								else
+								{
+									maxTries2++;
+									await Context.Channel.SendMessageAsync("Generated an invalid image, please wait while we're retrying...");
+									goto GetImage;
+								}
 							}
 
 							await Context.Channel.SendMessageAsync(user.Mention + $", Here is your image! Tags: [{input}]\n" + FurImage);

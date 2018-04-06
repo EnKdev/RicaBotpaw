@@ -9,6 +9,5 @@
 	"mod_img": 0,
     "mod_game": 0,
     "feat_nsfw": 0,
-    "feat_sfw": 0,
-	"feat_randimg": 0
+    "feat_sfw": 0 
 }
