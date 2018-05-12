@@ -1,0 +1,13 @@
+{
+	/* This example file has been cleaned up and refactored to be more readable. Every generated file by the bot doesn't look like this */
+	"_comment": "This contains the modules",
+	"guild": 123456789123456, /* This has been edited for the example */
+	"mod_pub": 0,
+	"feat_eco": 0,
+	"feat_eco_gmb": 0,
+	"feat_poll": 0,
+	"mod_img": 0,
+    "mod_game": 0,
+    "feat_nsfw": 0,
+    "feat_sfw": 0 
+}

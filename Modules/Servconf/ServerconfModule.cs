@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -20,7 +22,6 @@ namespace RicaBotpaw.Modules
 		private long randImgFeatures;
 		private long hashFeatures;
 		private ulong guild;
-
 		private CommandService _service;
 
 		public ServerconfModule(CommandService service)
@@ -67,11 +68,11 @@ namespace RicaBotpaw.Modules
 					//	   File.Delete($"./serv_configs/{name}.rconf");
 					// }
 
-					using (StreamWriter file = File.CreateText($"./serv_configs/{name}.rconf"))
+					using (StreamWriter file = File.CreateText($"./Data/serv_configs/{name}.rconf"))
 					{
 						var fileText = JsonConvert.SerializeObject(mod);
 						await file.WriteAsync(fileText);
-						await ReplyAsync($"Config file {name}.rconf created at /serv_configs");
+						await ReplyAsync($"Serverconfig file {name}.rconf created at /serv_configs");
 					}
 
 					await BotCooldown.Cooldown();
@@ -101,13 +102,13 @@ namespace RicaBotpaw.Modules
 					g = Context.Guild;
 					var name = g.Id + "_config";
 
-					if (!File.Exists($"./serv_configs/{name}.rconf"))
+					if (!File.Exists($"./Data/serv_configs/{name}.rconf"))
 					{
 						await ReplyAsync(ModStrings.GuildNoConfigFile);
 						return;
 					}
 					
-					var fileText = File.ReadAllText($"./serv_configs/{name}.rconf");
+					var fileText = File.ReadAllText($"./Data/serv_configs/{name}.rconf");
 					var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
 
 					publicModule = mods.ModPub;

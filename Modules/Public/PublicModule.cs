@@ -12,6 +12,8 @@ using RicaBotpaw.Config;
 using Newtonsoft.Json;
 using System.IO;
 using System.Xml.Serialization;
+using Microsoft.EntityFrameworkCore.Migrations;
+using RicaBotpaw.Modules.Users;
 using Urban.NET;
 
 namespace RicaBotpaw.Modules.Public
@@ -25,6 +27,7 @@ namespace RicaBotpaw.Modules.Public
 	{
 		private int modEnable;
 		private int gNoticeSent;
+		private int userExists;
 
 		/// <summary>
 		/// The service
@@ -67,6 +70,24 @@ namespace RicaBotpaw.Modules.Public
 			}
 			modEnable = 0;
 		}
+
+		private async Task CheckExistingJsonUser([Remainder] IUser u = null)
+		{
+			if (u == null) u = Context.User;
+
+			if (!File.Exists($"./Data/users/{u.Id.ToString()}_{u.Username.ToString()}.rbuser"))
+			{
+				await ReplyAsync("User does not exist");
+				userExists = 0;
+				return;
+			}
+			else
+			{
+				await ReplyAsync($"Found user {u.Username.ToString()} in Json Database, reading file...");
+				userExists = 1;
+			}
+		}
+
 
 		/// <summary>
 		/// Sometimes you need help...
@@ -307,7 +328,7 @@ namespace RicaBotpaw.Modules.Public
 			}
 		}
 
-		[Command("devlog", RunMode = RunMode.Async)]
+		[Command("devstop", RunMode = RunMode.Async)]
 		[Remarks("Generates a devlog before the bot gets shutdown in the terminal line")]
 		public async Task
 			Devstop(string logId, int caseIdentifier,
@@ -647,6 +668,7 @@ namespace RicaBotpaw.Modules.Public
 						$"MsgNtfc: **{N}\n**" +
 						$"Verification: **{VL}\n**" +
 						$"Role Count: **{XD}\n**" +
+						$"Roles: **{R}**\n" +
 						$"Members: **{X}\n**" +
 						$"Connection state: **{Z}\n\n**";
 					await ReplyAsync("", false, embedBuilder);
@@ -746,50 +768,39 @@ namespace RicaBotpaw.Modules.Public
 		}
 
 
-		// Database stuff
+		// Data stuff
 
-		/// <summary>
-		/// Returns data stored into the database
-		/// </summary>
-		/// <param name="user">The user.</param>
+		// Get info from Json
 
-		/// <returns></returns>
 		[Command("status", RunMode = RunMode.Async)]
-		[Alias("s")]
-		[Remarks("Retrieves data about a user from the Database")]
-		public async Task dbSay([Remainder] IUser user = null)
+		[Remarks("Gets your stored info!")]
+		public async Task GetInfoFromJson()
 		{
-			var g = Context.Guild as SocketGuild;
-			await CheckEnabledPublicModule(g);
+			var u = Context.User as SocketUser;
+			await CheckExistingJsonUser(u);
 
-			if (modEnable == 1)
+			if (userExists == 1)
 			{
 				if (BotCooldown.isCooldownRunning == false)
 				{
-					var embed = new EmbedBuilder()
+					var fileText = File.ReadAllText($"./Data/users/{u.Id.ToString()}_{u.Username.ToString()}.rbuser");
+					var data = JsonConvert.DeserializeObject<DiscordUserJSON>(fileText);
+
+					var embed = new EmbedBuilder
 					{
-						Color = new Color(0, 0, 255)
+						Color = new Color(127, 17, 160),
+						ThumbnailUrl = u.GetAvatarUrl(),
+						Title = $"Stored info for {u.Username.ToString()}",
+						Description = $"User ID: {data.UserId}\n" +
+									  $"Username: {data.Username}\n" +
+									  $"Tokens: {data.Tokens}\n" +
+									  $"Money: {data.Money}\n" +
+									  $"GUID: {data.UserGuid}",
 					};
-
-					if (user == null)
-					{
-						user = Context.User;
-					}
-
-					var result = Database.CheckExistingUser(user);
-
-					if (result.Count() <= 0)
-					{
-						Database.EnterUser(user);
-					}
-
-					var tableName = Database.GetUserStatus(user);
-					embed.Description = (Context.User.Mention + "\n\n" + user.Username + "'s current status is as followed: \n"
-					                     + ":small_blue_diamond:" + "UserID: " + tableName.FirstOrDefault().UserId + "\n"
-					                     + ":small_blue_diamond:" + tableName.FirstOrDefault().Tokens + " tokens!\n"
-					                     + ":small_blue_diamond:" + "Current custom rank: " + tableName.FirstOrDefault().Rank + "\n");
+					embed.WithFooter(new EmbedFooterBuilder().WithText($"Info embed created at {DateTime.Now}"));
 
 					await Context.Channel.SendMessageAsync("", false, embed);
+
 					await BotCooldown.Cooldown();
 				}
 				else
@@ -797,116 +808,118 @@ namespace RicaBotpaw.Modules.Public
 					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
-			else
+			else if (userExists == 0)
 			{
-				if (gNoticeSent == 0)
-				{
-					await ReplyAsync(ModStrings.PublicNotEnabled);
-				}
-				else
-				{
-					gNoticeSent = 0;
-					return;
-				}
+				return;
 			}
 		}
-
-
-		/// <summary>
-		/// Registers you inside the Database
-		/// </summary>
-		/// <param name="user">The user.</param>
-		/// <returns></returns>
-		[Command("enterDb", RunMode = RunMode.Async)]
-		[Remarks("Enters you into Ricas Database")]
-		public async Task dbEnter([Remainder] IUser user = null)
-		{
-			var g = Context.Guild as SocketGuild;
-			await CheckEnabledPublicModule(g);
-
-			if (modEnable == 1)
-			{
-				if (BotCooldown.isCooldownRunning == false)
-				{
-					if (user == null)
-					{
-						user = Context.User;
-						Database.EnterUser(user);
-						await ReplyAsync("You should be entered now. If not, then hell...");
-						await BotCooldown.Cooldown();
-					}
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
-				}
-			}
-			else
-			{
-				if (gNoticeSent == 0)
-				{
-					await ReplyAsync(ModStrings.PublicNotEnabled);
-				}
-				else
-				{
-					gNoticeSent = 0;
-					return;
-				}
-			}
-		}
-
-
 
 		// Database Awards, UwU
 
-		/// <summary>
-		/// When i want to award someone with some prestige
-		/// </summary>
-		/// <param name="user">The user.</param>
-		/// <param name="tokens">The tokens.</param>
-		/// <returns></returns>
-		[Command("award", RunMode = RunMode.Async)]
-		[Remarks("Award someone with some tokens, Woo!")]
-		public async Task Award(SocketGuildUser user, [Remainder] uint tokens)
+		[Command("addTokens", RunMode = RunMode.Async)]
+		[Remarks("(Botowner only) Adds some tokens.")]
+		public async Task TokenAdd(long tokens, [Remainder] IUser u = null)
 		{
-			var g = Context.Guild as SocketGuild;
-			await CheckEnabledPublicModule(g);
-
-			if (modEnable == 1)
+			if (u == null)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				u = Context.User;
+				await CheckExistingJsonUser(u);
+
+				if (userExists == 1)
 				{
-					if (tokens > 50)
+					if (BotCooldown.isCooldownRunning == false)
 					{
-						await ReplyAsync(Context.User.Mention +
-						                 ", Woah there. The amount you entered was too high to handle.\nKeep it at least below or equal to 50!");
-						await BotCooldown.Cooldown();
+						if (u.Id == 112559794543468544)
+						{
+							var fileName = $"{u.Id}_{u.Username}";
+							var fileText = File.ReadAllText($"./Data/users/{fileName}.rbuser");
+							var data = JsonConvert.DeserializeObject<DiscordUserJSON>(fileText);
+							var guidToKeep = data.UserGuid;
+							var userID = data.UserId;
+							var userName = data.Username;
+							var moneyToKeep = data.Money;
+							var oldTokenValue = data.Tokens;
+							var newTokenValue = data.Tokens + tokens;
+
+							DiscordUserJSON data2 = new DiscordUserJSON
+							{
+								UserId = userID,
+								Username = userName,
+								Money = moneyToKeep,
+								Tokens = newTokenValue,
+								UserGuid = guidToKeep
+							};
+
+							using (StreamWriter file = File.CreateText($"./Data/users/{fileName}.rbuser"))
+							{
+								var fileText2 = JsonConvert.SerializeObject(data2);
+								await file.WriteAsync(fileText2);
+								await Context.Channel.SendMessageAsync(
+									$"Tokens added to user {u.Username}!\nOld token value: {oldTokenValue}\nNew token value: {newTokenValue}");
+							}
+						}
+						else
+						{
+							await ReplyAsync("Only EnK can add tokens.");
+						}
 					}
 					else
 					{
-						Database.ChangeTokens(user, tokens);
-						await ReplyAsync(user.Mention + ", you were awarded with " + tokens + " tokens!");
-						await BotCooldown.Cooldown();
+						await ReplyAsync(BotCooldown.cooldownMsg);
 					}
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 			else
 			{
-				if (gNoticeSent == 0)
+				await CheckExistingJsonUser(u);
+
+				if (userExists == 1)
 				{
-					await ReplyAsync(ModStrings.PublicNotEnabled);
-				}
-				else
-				{
-					gNoticeSent = 0;
-					return;
+					if (BotCooldown.isCooldownRunning == false)
+					{
+						if (u.Id == 112559794543468544)
+						{
+							var fileName = $"{u.Id}_{u.Username}";
+							var fileText = File.ReadAllText($"./Data/users/{fileName}.rbuser");
+							var data = JsonConvert.DeserializeObject<DiscordUserJSON>(fileText);
+							var guidToKeep = data.UserGuid;
+							var userID = data.UserId;
+							var userName = data.Username;
+							var moneyToKeep = data.Money;
+							var oldTokenValue = data.Tokens;
+							var newTokenValue = data.Tokens + tokens;
+
+							DiscordUserJSON data2 = new DiscordUserJSON
+							{
+								UserId = userID,
+								Username = userName,
+								Money = moneyToKeep,
+								Tokens = newTokenValue,
+								UserGuid = guidToKeep
+							};
+
+							using (StreamWriter file = File.CreateText($"./Data/users/{fileName}.rbuser"))
+							{
+								var fileText2 = JsonConvert.SerializeObject(data2);
+								await file.WriteAsync(fileText2);
+								await Context.Channel.SendMessageAsync(
+									$"Tokens added to user {u.Username}!\nOld token value: {oldTokenValue}\nNew token value: {newTokenValue}");
+							}
+						}
+						else
+						{
+							await ReplyAsync("Only EnK can add tokens.");
+						}
+					}
+					else
+					{
+						await ReplyAsync(BotCooldown.cooldownMsg);
+					}
 				}
 			}
 		}
+
+		// Money
 
 		/// <summary>
 		/// Gets the best urban definition based on the term the user has given.

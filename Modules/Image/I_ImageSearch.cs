@@ -136,7 +136,7 @@ namespace RicaBotpaw.Modules.Image
 							    Tags.Contains("size_difference") || Tags.Contains("type:swf") || Tags.Contains("vore") ||
 							    Tags.Contains("watersports")) // Restricted tags
 							{
-								if (maxTries1 >= 5)
+								if (maxTries1 == 5)
 								{
 									await Context.Channel.SendMessageAsync(
 										"Maximum tries exceeded. Please try again with a different queue or tags");
@@ -243,7 +243,7 @@ namespace RicaBotpaw.Modules.Image
 								Tags.Contains("size_difference") || Tags.Contains("sex") || Tags.Contains("type:swf") || Tags.Contains("vore") ||
 								Tags.Contains("watersports")) // Restricted tags
 							{
-								if (maxTries2 >= 5)
+								if (maxTries2 == 5)
 								{
 									await Context.Channel.SendMessageAsync(
 										"Maximum tries exceeded. Please try again with a different queue or tags");

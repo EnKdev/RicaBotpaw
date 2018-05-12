@@ -14,12 +14,12 @@ namespace RicaBotpaw
 	public class CommandHandler
 	{
 		/// <summary>
-		///     The client
+		/// The client
 		/// </summary>
 		private DiscordSocketClient _client;
 
 		/// <summary>
-		///     The CMDS
+		/// The CMDS
 		/// </summary>
 		private CommandService _cmds;
 
@@ -38,24 +38,33 @@ namespace RicaBotpaw
 			"RUBRUBRUBRUBRUBRUBRUBRUBRUB",
 			"Visual Studio 2017",
 			"For help, use ;help",
-			"Need a cat? Try ;cat",
+			"Feeling random? Use ;random help",
 			"I have databases",
 			"Omae wa mou! Shindeiru!",
 			"NANI?!",
 			"being the best achievement EnK_ has ever made in terms of development",
 			"Hyet! Ha! *Screaming*",
-			"with your neck"
+			"with your neck",
+			"Facepalm Simulator 2018",
+			"no u",
+			"Simulator Simulator 2018",
+			"Being a construction site",
 		};
 
 		/// <summary>
-		/// The rand status
+		/// The random status class instance the bot uses to pick it's random status message
 		/// </summary>
 		private Random randStatus = new Random();
 
 		/// <summary>
-		///     This "installs" all modules into the handler and registers their commands
+		/// The random status class instance the bot uses to pick it's random availability status
 		/// </summary>
-		/// <param name="c">The c.</param>
+		private Random randStatStatus = new Random();
+
+		/// <summary>
+		/// This "installs" all modules into the handler and registers their commands
+		/// </summary>
+		/// <param name="c">The client.</param>
 		/// <returns></returns>
 		public async Task Install(DiscordSocketClient c)
 		{
@@ -70,14 +79,12 @@ namespace RicaBotpaw
 
 			_client.MessageReceived += HandleCommand;
 			_client.Ready += onReady;
-			_client.UserJoined += onJoin;
-			_client.UserLeft += onLeave;
 		}
 
 		/// <summary>
-		///     This is the actual commandhandler
+		/// This is the actual commandhandler
 		/// </summary>
-		/// <param name="s">The s.</param>
+		/// <param name="s">The socketmessage.</param>
 		/// <returns></returns>
 		public async Task HandleCommand(SocketMessage s)
 		{
@@ -96,35 +103,13 @@ namespace RicaBotpaw
 		}
 
 		/// <summary>
-		///     When the bot is ready, this will be triggered
+		/// When the bot is ready, this will be triggered
 		/// </summary>
 		/// <returns></returns>
 		public async Task onReady()
 		{
 			await _client.SetGameAsync("For help, use ;help"); // Default first status.
 			await CheckTime();
-		}
-
-		/// <summary>
-		///     When a new user joins a guild, this will be triggered
-		/// </summary>
-		/// <param name="user">The user.</param>
-		/// <returns></returns>
-		public async Task onJoin(SocketGuildUser user)
-		{
-			var channel = user.Guild.DefaultChannel;
-			await channel.SendMessageAsync(user.Username + " has entered the server! Say hi!");
-		}
-
-		/// <summary>
-		///     When a user leaves a guild, this will be triggered
-		/// </summary>
-		/// <param name="user">The user.</param>
-		/// <returns></returns>
-		public async Task onLeave(SocketGuildUser user)
-		{
-			var channel = user.Guild.DefaultChannel;
-			await channel.SendMessageAsync(user.Username + " has left us alone! Parting is such a sweet sorrow...");
 		}
 
 		public async Task CheckTime()
