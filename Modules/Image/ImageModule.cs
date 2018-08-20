@@ -8,6 +8,7 @@ using ImageSharp;
 using ImageSharp.Dithering;
 using ImageSharp.Processing;
 using Newtonsoft.Json;
+using RicaBotpaw.Cooldown;
 using RicaBotpaw.Logging;
 using RicaBotpaw.Libs;
 
@@ -41,14 +42,14 @@ namespace RicaBotpaw.Modules.Image
 		{
 			if (g == null) g = Context.Guild;
 
-			if (!File.Exists($"./serv_configs/{g.Id.ToString()}_config.rconf"))
+			if (!File.Exists($"./Data/serv_configs/{g.Id.ToString()}_config.rconf"))
 			{
 				await ReplyAsync(ModStrings.GuildNoConfigFile);
 				gNoticeSent = 1;
 				return;
 			}
 
-			var fileText = File.ReadAllText($"./serv_configs/{g.Id.ToString()}_config.rconf");
+			var fileText = File.ReadAllText($"./Data/serv_configs/{g.Id.ToString()}_config.rconf");
 			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
 
 			if (mods.Guild != g.Id)
@@ -65,6 +66,21 @@ namespace RicaBotpaw.Modules.Image
 			modEnable = 0;
 		}
 
+		private async Task CheckIfUserIsOnCooldown([Remainder] IUser u = null)
+		{
+			if (u == null) u = Context.User;
+
+			if (UserCooldown.UsersInCooldown.Contains(u))
+			{
+				UserCooldown.UserIsInCooldown = true;
+				ReplyAsync("You're in cooldown! Please wait 5 seconds!");
+			}
+			else
+			{
+				UserCooldown.UserIsInCooldown = false;
+			}
+		}
+
 		/// <summary>
 		/// Flippedy flip!
 		/// </summary>
@@ -76,18 +92,16 @@ namespace RicaBotpaw.Modules.Image
 		public async Task FlipImage(int degrees = 888, string url = null)
 		{
 			var g = Context.Guild as SocketGuild;
+			var user = Context.User;
 			await CheckEnabledImageModule(g);
+			await CheckIfUserIsOnCooldown(user);
 
 			if (modEnable == 1)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				if (UserCooldown.UserIsInCooldown == false)
 				{
 					await flipImage(degrees, url);
-					await BotCooldown.Cooldown();
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
+					await UserCooldown.PutInCooldown(user);
 				}
 			}
 			else
@@ -152,11 +166,13 @@ namespace RicaBotpaw.Modules.Image
 		public async Task filterImage(string filter = null, [Remainder] SocketUser user = null)
 		{
 			var g = Context.Guild as SocketGuild;
+			var user1 = Context.User;
 			await CheckEnabledImageModule(g);
+			await CheckIfUserIsOnCooldown(user1);
 
 			if (modEnable == 1)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				if (UserCooldown.UserIsInCooldown == false)
 				{
 					var task = Task.Run(async () =>
 					{
@@ -254,12 +270,8 @@ namespace RicaBotpaw.Modules.Image
 								return;
 						}
 						await core.StopStreamAsync(Context.Message, img);
-						await BotCooldown.Cooldown();
+						await UserCooldown.PutInCooldown(user1);
 					});
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 			else

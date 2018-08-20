@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<stopReason xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <logId>test_dev-1.9.0</logId>
+  <case>0</case>
+  <caseHelp>Case Identifier Help: 0 = Dev Update, 1 = Severe Issue</caseHelp>
+  <r>Simple test</r>
+</stopReason>

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Newtonsoft.Json;
+using RicaBotpaw.Cooldown;
 using RicaBotpaw.Logging;
 
 namespace RicaBotpaw.Modules
@@ -12,9 +13,6 @@ namespace RicaBotpaw.Modules
 	public class ServerconfModule : ModuleBase
 	{
 		private long publicModule;
-		private long ecoFeatures;
-		private long gamblingFeatures;
-		private long pollFeatures;
 		private long imagingModule;
 		private long gameModule;
 		private long nsfwFeatures;
@@ -29,12 +27,30 @@ namespace RicaBotpaw.Modules
 			_service = service;
 		}
 
+		private async Task CheckIfUserIsOnCooldown([Remainder] IUser u = null)
+		{
+			if (u == null) u = Context.User;
+
+			if (UserCooldown.UsersInCooldown.Contains(u))
+			{
+				UserCooldown.UserIsInCooldown = true;
+				ReplyAsync("You're in cooldown! Please wait 5 seconds!");
+			}
+			else
+			{
+				UserCooldown.UserIsInCooldown = false;
+			}
+		}
+
 		[Command("conf", RunMode = RunMode.Async)]
 		[Remarks("Server Configurations!")]
 		[RequireUserPermission(GuildPermission.Administrator)]
-		public async Task Conf(int publicFlag, int economyFlag, int gamblingFlag, int pollFlag, int imagingFlag, int gameFlag, int nsfwFlag, int sfwFlag, int randImgFlag, int hashFlag, [Remainder] IGuild g = null)
+		public async Task Conf(int publicFlag, int imagingFlag, int nsfwFlag, int sfwFlag, int randImgFlag, int hashFlag, [Remainder] IGuild g = null)
 		{
-			if (BotCooldown.isCooldownRunning == false)
+			var user = Context.User;
+			await CheckIfUserIsOnCooldown(user);
+
+			if (UserCooldown.UserIsInCooldown == false)
 			{
 				if (g == null)
 				{
@@ -45,12 +61,8 @@ namespace RicaBotpaw.Modules
 					{
 						Comment = "This contains the modules",
 						Guild = g.Id,
-						ModGame = gameFlag,
 						ModImg = imagingFlag,
 						ModPub = publicFlag,
-						ModPubEco = economyFlag,
-						ModPubEcoGmb = gamblingFlag,
-						ModPubPoll = pollFlag,
 						ModNSFW = nsfwFlag,
 						ModSFW = sfwFlag,
 						ModRandImg = randImgFlag,
@@ -75,12 +87,8 @@ namespace RicaBotpaw.Modules
 						await ReplyAsync($"Serverconfig file {name}.rconf created at /serv_configs");
 					}
 
-					await BotCooldown.Cooldown();
+					await UserCooldown.PutInCooldown(user);
 				}
-			}
-			else
-			{
-				await ReplyAsync(BotCooldown.cooldownMsg);
 			}
 		}
 
@@ -95,7 +103,10 @@ namespace RicaBotpaw.Modules
 		[Remarks("This checks the modules for a guild")]
 		public async Task ModCheck([Remainder] IGuild g = null)
 		{
-			if (BotCooldown.isCooldownRunning == false)
+			var user = Context.User;
+			await CheckIfUserIsOnCooldown(user);
+
+			if (UserCooldown.UserIsInCooldown == false)
 			{
 				if (g == null)
 				{
@@ -112,11 +123,7 @@ namespace RicaBotpaw.Modules
 					var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
 
 					publicModule = mods.ModPub;
-					ecoFeatures = mods.ModPubEco;
-					gamblingFeatures = mods.ModPubEcoGmb;
-					pollFeatures = mods.ModPubPoll;
 					imagingModule = mods.ModImg;
-					gameModule = mods.ModGame;
 					nsfwFeatures = mods.ModNSFW;
 					sfwFeatures = mods.ModSFW;
 					randImgFeatures = mods.ModRandImg;
@@ -130,9 +137,6 @@ namespace RicaBotpaw.Modules
 						Title = $"Modules enabled for Guild {g.Name} (Id: {g.Id})",
 						Description = "Short notice: 0 = disabled, 1 = enabled.\n" +
 						              $"Public Commands (PublicModule): {publicModule}\n" +
-						              $"Economy (EcoFeatures): {ecoFeatures}\n" +
-						              $"Gambling (GamblingFeatures): {gamblingFeatures}\n" +
-						              $"Polls (PollFeature): {pollFeatures}\n" +
 						              $"Imaging Commands (ImagingModule): {imagingModule}\n" +
 						              $"Game Commands (GamesModule): {gameModule}\n" +
 									  $"NSFW Image Searching (NSFWFeatures): {nsfwFeatures}\n" +
@@ -144,11 +148,7 @@ namespace RicaBotpaw.Modules
 					await ReplyAsync("", false, embed);
 				}
 
-				await BotCooldown.Cooldown();
-			}
-			else
-			{
-				await ReplyAsync(BotCooldown.cooldownMsg);
+				await UserCooldown.PutInCooldown(user);
 			}
 		}
 	}

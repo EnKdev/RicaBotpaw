@@ -13,20 +13,14 @@ namespace RicaBotpaw.Config
 		[JsonProperty("mod_pub")]
 		public long ModPub { get; set; }
 
-		[JsonProperty("feat_eco")]
-		public long ModPubEco { get; set; }
-
-		[JsonProperty("feat_eco_gmb")]
-		public long ModPubEcoGmb { get; set; }
-
-		[JsonProperty("feat_poll")]
-		public long ModPubPoll { get; set; }
+		// [JsonProperty("feat_eco")]
+		// public long ModPubEco { get; set; }
 
 		[JsonProperty("mod_img")]
 		public long ModImg { get; set; }
 
-		[JsonProperty("mod_game")]
-		public long ModGame { get; set; }
+		// [JsonProperty("mod_game")]
+		// public long ModGame { get; set; }
 
 		[JsonProperty("feat_nsfw")]
 		public long ModNSFW { get; set; }

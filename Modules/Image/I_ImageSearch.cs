@@ -13,6 +13,7 @@ using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.IO;
+using RicaBotpaw.Cooldown;
 
 namespace RicaBotpaw.Modules.Image
 {
@@ -35,14 +36,14 @@ namespace RicaBotpaw.Modules.Image
 		{
 			if (g == null) g = Context.Guild;
 
-			if (!File.Exists($"./serv_configs/{g.Id.ToString()}_config.rconf"))
+			if (!File.Exists($"./Data/serv_configs/{g.Id.ToString()}_config.rconf"))
 			{
 				await ReplyAsync(ModStrings.GuildNoConfigFile);
 				gNoticeSent = 1;
 				return;
 			}
 
-			var fileText = File.ReadAllText($"./serv_configs/{g.Id.ToString()}_config.rconf");
+			var fileText = File.ReadAllText($"./Data/serv_configs/{g.Id.ToString()}_config.rconf");
 			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
 
 			if (mods.Guild != g.Id)
@@ -59,18 +60,33 @@ namespace RicaBotpaw.Modules.Image
 			modEnableNSFW = 0;
 		}
 
+		private async Task CheckIfUserIsOnCooldown([Remainder] IUser u = null)
+		{
+			if (u == null) u = Context.User;
+
+			if (UserCooldown.UsersInCooldown.Contains(u))
+			{
+				UserCooldown.UserIsInCooldown = true;
+				ReplyAsync("You're in cooldown! Please wait 5 seconds!");
+			}
+			else
+			{
+				UserCooldown.UserIsInCooldown = false;
+			}
+		}
+
 		private async Task CheckSFWFeatureEnabled([Remainder] IGuild g = null)
 		{
 			if (g == null) g = Context.Guild;
 
-			if (!File.Exists($"./serv_configs/{g.Id.ToString()}_config.rconf"))
+			if (!File.Exists($"./Data/serv_configs/{g.Id.ToString()}_config.rconf"))
 			{
 				await ReplyAsync(ModStrings.GuildNoConfigFile);
 				gNoticeSent = 1;
 				return;
 			}
 
-			var fileText = File.ReadAllText($"./serv_configs/{g.Id.ToString()}_config.rconf");
+			var fileText = File.ReadAllText($"./Data/serv_configs/{g.Id.ToString()}_config.rconf");
 			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
 
 			if (mods.Guild != g.Id)
@@ -96,10 +112,11 @@ namespace RicaBotpaw.Modules.Image
 			var user = Context.User as SocketUser;
 			var g = Context.Guild as SocketGuild;
 			await CheckNSFWFeatureEnabled(g);
+			await CheckIfUserIsOnCooldown(user);
 
 			if (modEnableNSFW == 1)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				if (UserCooldown.UserIsInCooldown == false)
 				{
 					GetImage:
 					using (var client = new HttpClient(new HttpClientHandler
@@ -113,7 +130,7 @@ namespace RicaBotpaw.Modules.Image
 							return;
 						}
 
-						client.DefaultRequestHeaders.Add("User-Agent", "RicaBotpaw/2.0.1-pre1 (by EnK_ on e621)");
+						client.DefaultRequestHeaders.Add("User-Agent", "RicaBotpaw/2.0.0-pre3 (by EnK_ on e621)");
 						string websiteUrl = "https://e621.net/post/index.json?tags=" + input + "%20order:random+rating:e&limit=1";
 						client.BaseAddress = new Uri(websiteUrl);
 						HttpResponseMessage res = client.GetAsync("").Result;
@@ -153,6 +170,7 @@ namespace RicaBotpaw.Modules.Image
 
 							var msg = await user.GetOrCreateDMChannelAsync();
 							await msg.SendMessageAsync($"Here is your yiff! [Tags: {input}]\n" + YiffImage);
+							await UserCooldown.PutInCooldown(user);
 						}
 						catch (Exception e)
 						{
@@ -172,12 +190,9 @@ namespace RicaBotpaw.Modules.Image
 								new EmbedFooterBuilder().WithText("E621/E926 API Request failed!"));
 
 							await ownerNotification.SendMessageAsync("", false, embed);
+							await UserCooldown.PutInCooldown(user);
 						}
 					}
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 			else
@@ -202,11 +217,12 @@ namespace RicaBotpaw.Modules.Image
 			var ch = Context.Channel as SocketChannel;
 			var g = Context.Guild as SocketGuild;
 			await CheckSFWFeatureEnabled(g);
+			await CheckIfUserIsOnCooldown(user);
 			var maxTries = 0;
 
 			if (modEnableSFW == 1)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				if (UserCooldown.UserIsInCooldown == false)
 				{
 					GetImage:
 					using (var client = new HttpClient(new HttpClientHandler
@@ -220,7 +236,7 @@ namespace RicaBotpaw.Modules.Image
 							return;
 						}
 
-						client.DefaultRequestHeaders.Add("User-Agent", "RicaBotpaw/2.0.1-pre1 (by EnK_ on e621)");
+						client.DefaultRequestHeaders.Add("User-Agent", "RicaBotpaw/2.0.0-pre3 (by EnK_ on e621)");
 						string websiteUrl = "https://e926.net/post/index.json?tags=" + input + "%20order:random&limit=1";
 						client.BaseAddress = new Uri(websiteUrl);
 						HttpResponseMessage res = client.GetAsync("").Result;
@@ -257,8 +273,8 @@ namespace RicaBotpaw.Modules.Image
 									goto GetImage;
 								}
 							}
-
 							await Context.Channel.SendMessageAsync(user.Mention + $", Here is your image! Tags: [{input}]\n" + FurImage);
+							await UserCooldown.PutInCooldown(user);
 						}
 						catch (Exception e)
 						{
@@ -278,12 +294,9 @@ namespace RicaBotpaw.Modules.Image
 								new EmbedFooterBuilder().WithText("E621/E926 API Request failed!"));
 
 							await ownerNotification.SendMessageAsync("", false, embed);
+							await UserCooldown.PutInCooldown(user);
 						}
 					}
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 			else

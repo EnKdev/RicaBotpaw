@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 namespace RicaBotpaw
 {
 	// This is the class which adds the cooldown to the bot. It prevents users from triggering a command in the 5 second cooldown span.
+	[Obsolete("This class is obsolete and shouldn't be used anymore.\nPlease refer to using the UserCooldown method which has gotten implemented in 2.0-pre3", true)]
 	public class BotCooldown
 	{
 		public static bool isCooldownRunning = false; // Default, also that thing which adds the secure factor by running checks if the bot is on cooldown or not.

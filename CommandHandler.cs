@@ -49,6 +49,8 @@ namespace RicaBotpaw
 			"no u",
 			"Simulator Simulator 2018",
 			"Being a construction site",
+			"Rut simulator 2018",
+
 		};
 
 		/// <summary>

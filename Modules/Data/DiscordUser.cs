@@ -19,5 +19,8 @@ namespace RicaBotpaw.Modules.Data
 
 		[JsonProperty("money")]
 		public long Money { get; set; }
+
+		[JsonProperty("daily")]
+		public DateTime Daily { get; set; }
 	}
 }

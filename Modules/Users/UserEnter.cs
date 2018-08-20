@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Newtonsoft.Json;
+using RicaBotpaw.Cooldown;
 using RicaBotpaw.Modules.Data;
 
 namespace RicaBotpaw.Modules.Users
@@ -23,15 +24,30 @@ namespace RicaBotpaw.Modules.Users
 		    _service = service;
 	    }
 
-	    [Command("register", RunMode = RunMode.Async)]
+		private async Task CheckIfUserIsOnCooldown([Remainder] IUser u = null)
+		{
+			if (u == null) u = Context.User;
+
+			if (UserCooldown.UsersInCooldown.Contains(u))
+			{
+				UserCooldown.UserIsInCooldown = true;
+				ReplyAsync("You're in cooldown! Please wait 5 seconds!");
+			}
+			else
+			{
+				UserCooldown.UserIsInCooldown = false;
+			}
+		}
+
+		[Command("register", RunMode = RunMode.Async)]
 	    [Remarks("Registers you into ricas new data logger!")]
 	    public async Task EnterJson([Remainder] IUser u = null)
-	    {
-		    if (BotCooldown.isCooldownRunning == false)
+		{
+			if (u == null) u = Context.User;
+			await CheckIfUserIsOnCooldown(u);
+
+		    if (UserCooldown.UserIsInCooldown == false)
 		    {
-			    if (u == null)
-			    {
-				    u = Context.User;
 				    var fileName = u.Id.ToString() + "_" + u.Username.ToString();
 				    var guid = Guid.NewGuid().ToString();
 
@@ -51,12 +67,7 @@ namespace RicaBotpaw.Modules.Users
 					    await ReplyAsync($"User file {fileName}.rbuser created at /users");
 				    }
 
-				    await BotCooldown.Cooldown();
-			    }
-		    }
-		    else
-		    {
-			    await ReplyAsync(BotCooldown.cooldownMsg);
+			    await UserCooldown.PutInCooldown(u);
 		    }
 	    }
 	}

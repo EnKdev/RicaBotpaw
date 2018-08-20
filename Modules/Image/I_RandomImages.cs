@@ -9,6 +9,7 @@ using RicaBotpaw.Logging;
 using Discord;
 using System.IO;
 using Newtonsoft.Json;
+using RicaBotpaw.Cooldown;
 
 namespace RicaBotpaw.Modules.Image
 {
@@ -28,14 +29,14 @@ namespace RicaBotpaw.Modules.Image
 		{
 			if (g == null) g = Context.Guild;
 
-			if (!File.Exists($"./serv_configs/{g.Id.ToString()}_config.rconf"))
+			if (!File.Exists($"./Data/serv_configs/{g.Id.ToString()}_config.rconf"))
 			{
 				await ReplyAsync(ModStrings.GuildNoConfigFile);
 				gNoticeSent = 1;
 				return;
 			}
 
-			var fileText = File.ReadAllText($"./serv_configs/{g.Id.ToString()}_config.rconf");
+			var fileText = File.ReadAllText($"./Data/serv_configs/{g.Id.ToString()}_config.rconf");
 			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
 
 			if (mods.Guild != g.Id)
@@ -52,6 +53,21 @@ namespace RicaBotpaw.Modules.Image
 			featEnable = 0;
 		}
 
+		private async Task CheckIfUserIsOnCooldown([Remainder] IUser u = null)
+		{
+			if (u == null) u = Context.User;
+
+			if (UserCooldown.UsersInCooldown.Contains(u))
+			{
+				UserCooldown.UserIsInCooldown = true;
+				ReplyAsync("You're in cooldown! Please wait 5 seconds!");
+			}
+			else
+			{
+				UserCooldown.UserIsInCooldown = false;
+			}
+		}
+
 		/// <summary>
 		/// Random animals!
 		/// </summary>
@@ -61,11 +77,12 @@ namespace RicaBotpaw.Modules.Image
 		public async Task RandomImage([Remainder] string species = null)
 		{
 			var g = Context.Guild as SocketGuild;
+			var user = Context.User;
 			await CheckRandomImageFeatureEnabled(g);
 
 			if (featEnable == 1)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				if (UserCooldown.UserIsInCooldown == false)
 				{
 					switch (species)
 					{
@@ -88,7 +105,7 @@ namespace RicaBotpaw.Modules.Image
 								string FoxImage = json["file"].ToString();
 
 								await ReplyAsync(FoxImage);
-								await BotCooldown.Cooldown();
+								await UserCooldown.PutInCooldown(user);
 							}
 							break;
 						case "wolf":
@@ -110,7 +127,7 @@ namespace RicaBotpaw.Modules.Image
 								string WolfImage = json["file"].ToString();
 
 								await ReplyAsync(WolfImage);
-								await BotCooldown.Cooldown();
+								await UserCooldown.PutInCooldown(user);
 							}
 							break;
 						case "axolotl":
@@ -132,7 +149,7 @@ namespace RicaBotpaw.Modules.Image
 								string AxoImage = json["file"].ToString();
 
 								await ReplyAsync(AxoImage);
-								await BotCooldown.Cooldown();
+								await UserCooldown.PutInCooldown(user);
 							}
 							break;
 						case "snake":
@@ -154,7 +171,7 @@ namespace RicaBotpaw.Modules.Image
 								string SnakeImage = json["file"].ToString();
 
 								await ReplyAsync(SnakeImage);
-								await BotCooldown.Cooldown();
+								await UserCooldown.PutInCooldown(user);
 							}
 							break;
 						// case "bunny":
@@ -179,15 +196,34 @@ namespace RicaBotpaw.Modules.Image
 						//			await BotCooldown.Cooldown();
 						//		}
 						//		break;
+						case "cat":
+							Console.Write("Fetching random cat image...");
+							using (var client = new HttpClient(new HttpClientHandler
+							{
+								AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+							}))
+							{
+								string websiteUrl = "http://aws.random.cat/meow";
+								client.BaseAddress = new Uri(websiteUrl);
+
+								HttpResponseMessage res = client.GetAsync("").Result;
+								res.EnsureSuccessStatusCode();
+
+								string result = await res.Content.ReadAsStringAsync();
+								var json = JObject.Parse(result);
+
+								string CatImage = json["file"].ToString();
+
+								await ReplyAsync(CatImage);
+								await UserCooldown.PutInCooldown(user);
+							}
+							break;
 						default:
 							await ReplyAsync("Invalid input detected. The only species supported are:\n`fox, wolf, axolotl, snake`");
+							await UserCooldown.PutInCooldown(user);
 							return;
 
 					}
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 			else

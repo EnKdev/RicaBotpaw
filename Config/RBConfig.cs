@@ -11,7 +11,15 @@
 		/// <value>
 		///     The bot version.
 		/// </value>
-		public static string BotVersion = "2.0.0-pre1.2";
+		public static string BotVersion = "2.0.0-pre3";
+
+		/// <summary>
+		/// The bots sub version name
+		/// </summary>
+		/// <value>
+		/// The sub version name
+		/// </value>
+		public static string BotSubVersionName = "Neon";
 
 		/// <summary>
 		///     Contains the bots build revision
@@ -19,7 +27,7 @@
 		/// <value>
 		///     The build revision.
 		/// </value>
-		public static string BuildRevision = "0604180900_RB_200pre12";
+		public static string BuildRevision = "2008180457_RB_200pre3";
 
 		/// <summary>
 		///     Contains the bots author
@@ -27,7 +35,7 @@
 		/// <value>
 		///     The bot author.
 		/// </value>
-		public static string BotAuthor = "EnK_/zi8tx/R3sharp";
+		public static string BotAuthor = "EnK_";
 
 		/// <summary>
 		///     Contains the bots module count
@@ -35,7 +43,7 @@
 		/// <value>
 		///     The module count.
 		/// </value>
-		public static int MainModules = 5;
+		public static int MainModules = 6;
 
 		/// <summary>
 		///		Contains the bots extensive module count
@@ -43,15 +51,7 @@
 		/// <value>
 		///		The extension module count.
 		/// </value>
-		public static int ExtensionModules = 5;
+		public static int ExtensionModules = 2;
 
-
-		/// <summary>
-		/// Contains the bots databases
-		/// </summary>
-		/// <value>
-		/// The Database count
-		/// </value>
-		public static int BotDatabases = 1;
 	}
 }

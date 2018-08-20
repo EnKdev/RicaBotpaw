@@ -11,9 +11,9 @@ using RicaBotpaw.Logging;
 using RicaBotpaw.Config;
 using Newtonsoft.Json;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Xml.Serialization;
-using Microsoft.EntityFrameworkCore.Migrations;
-using RicaBotpaw.Modules.Users;
+using RicaBotpaw.Cooldown;
 using Urban.NET;
 
 namespace RicaBotpaw.Modules.Public
@@ -47,14 +47,14 @@ namespace RicaBotpaw.Modules.Public
 		{
 			if (g == null) g = Context.Guild;
 
-			if (!File.Exists($"./serv_configs/{g.Id.ToString()}_config.rconf"))
+			if (!File.Exists($"./Data/serv_configs/{g.Id.ToString()}_config.rconf"))
 			{
 				await ReplyAsync(ModStrings.GuildNoConfigFile);
 				gNoticeSent = 1;
 				return;
 			}
 
-			var fileText = File.ReadAllText($"./serv_configs/{g.Id.ToString()}_config.rconf");
+			var fileText = File.ReadAllText($"./Data/serv_configs/{g.Id.ToString()}_config.rconf");
 			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
 
 			if (mods.Guild != g.Id)
@@ -68,7 +68,11 @@ namespace RicaBotpaw.Modules.Public
 				modEnable = 1;
 				return;
 			}
-			modEnable = 0;
+			else
+			{
+				modEnable = 0;
+				return;
+			}
 		}
 
 		private async Task CheckExistingJsonUser([Remainder] IUser u = null)
@@ -88,6 +92,21 @@ namespace RicaBotpaw.Modules.Public
 			}
 		}
 
+		private async Task CheckIfUserIsOnCooldown([Remainder] IUser u = null)
+		{
+			if (u == null) u = Context.User;
+
+			if (UserCooldown.UsersInCooldown.Contains(u))
+			{
+				UserCooldown.UserIsInCooldown = true;
+				ReplyAsync("You're in cooldown! Please wait 5 seconds!");
+			}
+			else
+			{
+				UserCooldown.UserIsInCooldown = false;
+			}
+		}
+
 
 		/// <summary>
 		/// Sometimes you need help...
@@ -98,11 +117,13 @@ namespace RicaBotpaw.Modules.Public
 		public async Task HelpAsync()
 		{
 			var g = Context.Guild as SocketGuild;
+			var user = Context.User;
 			await CheckEnabledPublicModule(g);
+			await CheckIfUserIsOnCooldown(user);
 
 			if (modEnable == 1)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				if (UserCooldown.UserIsInCooldown == false)
 				{
 					var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
 
@@ -132,14 +153,12 @@ namespace RicaBotpaw.Modules.Public
 								x.IsInline = false;
 							});
 						}
+
+						
 					}
 
 					await dmChannel.SendMessageAsync("", false, builder.Build());
-					await BotCooldown.Cooldown();
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
+					await UserCooldown.PutInCooldown(user);
 				}
 			}
 			else
@@ -162,11 +181,13 @@ namespace RicaBotpaw.Modules.Public
 		public async Task ModuleHelp()
 		{
 			var g = Context.Guild as SocketGuild;
+			var user = Context.User;
 			await CheckEnabledPublicModule(g);
+			await CheckIfUserIsOnCooldown(user);
 
 			if (modEnable == 1)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				if (UserCooldown.UserIsInCooldown == false)
 				{
 					var module = _service.Modules;
 					var emb = new EmbedBuilder();
@@ -190,11 +211,7 @@ namespace RicaBotpaw.Modules.Public
 						});
 					}
 					await ReplyAsync("", false, emb.Build());
-					await BotCooldown.Cooldown();
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
+					await UserCooldown.PutInCooldown(user);
 				}
 			}
 			else
@@ -223,11 +240,13 @@ namespace RicaBotpaw.Modules.Public
 		public async Task HelpAsync(string command)
 		{
 			var g = Context.Guild as SocketGuild;
+			var user = Context.User;
 			await CheckEnabledPublicModule(g);
+			await UserCooldown.PutInCooldown(user);
 
 			if (modEnable == 1)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				if (UserCooldown.UserIsInCooldown == false)
 				{
 					var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
 					var result = _service.Search(Context, command);
@@ -258,11 +277,7 @@ namespace RicaBotpaw.Modules.Public
 					}
 
 					await dmChannel.SendMessageAsync("", false, builder.Build());
-					await BotCooldown.Cooldown();
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
+					await UserCooldown.PutInCooldown(user);
 				}
 			}
 			else
@@ -289,29 +304,27 @@ namespace RicaBotpaw.Modules.Public
 		public async Task SetGame([Remainder] string game)
 		{
 			var g = Context.Guild as SocketGuild;
+			var user = Context.User;
 			await CheckEnabledPublicModule(g);
+			await CheckIfUserIsOnCooldown(user);
 
 			if (modEnable == 1)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				if (UserCooldown.UserIsInCooldown == false)
 				{
 					if (!(Context.User.Id == 112559794543468544))
 					{
 						await Context.Channel.SendMessageAsync(
 							"You do not have permission to change my game as only my Master has it.");
-						await BotCooldown.Cooldown();
+						await UserCooldown.PutInCooldown(user);
 					}
 					else
 					{
 						await (Context.Client as DiscordSocketClient).SetGameAsync(game);
 						await Context.Channel.SendMessageAsync($"Successfully set the game to *{game}*");
 						Console.WriteLine($"{DateTime.Now}: Game was changed to {game}");
-						await BotCooldown.Cooldown();
+						await UserCooldown.PutInCooldown(user);
 					}
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 			else
@@ -334,13 +347,15 @@ namespace RicaBotpaw.Modules.Public
 			Devstop(string logId, int caseIdentifier,
 				[Remainder] string reason = null) // Exempt from the configurations since it is a dev command
 		{
-			if (BotCooldown.isCooldownRunning == false)
+			var user = Context.User;
+			await CheckIfUserIsOnCooldown(user);
+			if (UserCooldown.UserIsInCooldown == false)
 			{
 				if (!(Context.User.Id == 112559794543468544))
 				{
 					await Context.Channel.SendMessageAsync(
 						"You are unable to create a devStop Log. Only EnK_ can do that action.");
-					await BotCooldown.Cooldown();
+					await UserCooldown.PutInCooldown(user);
 				}
 				else
 				{
@@ -383,10 +398,6 @@ namespace RicaBotpaw.Modules.Public
 					Environment.Exit(0);
 				}
 			}
-			else
-			{
-				await ReplyAsync(BotCooldown.cooldownMsg);
-			}
 		}
 
 
@@ -399,11 +410,13 @@ namespace RicaBotpaw.Modules.Public
 		public async Task Info()
 		{
 			var gld = Context.Guild as SocketGuild;
+			var user = Context.User;
 			await CheckEnabledPublicModule(gld);
+			await CheckIfUserIsOnCooldown(user);
 
 			if (modEnable == 1)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				if (UserCooldown.UserIsInCooldown == false)
 				{
 					using (var process = Process.GetCurrentProcess())
 					{
@@ -452,38 +465,14 @@ namespace RicaBotpaw.Modules.Public
 							.AddField(y =>
 							{
 								y.Name = "RB Version";
-								y.Value = RBConfig.BotVersion;
+								y.Value = "Version: " + RBConfig.BotVersion + "\n" + "Version Name: " + RBConfig.BotSubVersionName + "\n" + "Build Revision: " + RBConfig.BuildRevision;
 								y.IsInline = false;
 							})
 							.AddField(y =>
 							{
-								y.Name = "RB Build Revision";
-								y.Value = RBConfig.BuildRevision;
+								y.Name = "RB Modules";
+								y.Value = "Main Modules: " + RBConfig.MainModules + "\n" + "Extension Modules: " + RBConfig.ExtensionModules;
 								y.IsInline = true;
-							})
-							.AddField(y =>
-							{
-								y.Name = "RB Main Modules";
-								y.Value = RBConfig.MainModules;
-								y.IsInline = true;
-							})
-							.AddField(y =>
-							{
-								y.Name = "RB Extensions";
-								y.Value = RBConfig.ExtensionModules;
-								y.IsInline = true;
-							})
-							.AddField(y =>
-							{
-								y.Name = "RB Databases";
-								y.Value = RBConfig.BotDatabases;
-								y.IsInline = true;
-							})
-							.AddField(y =>
-							{
-								y.Name = "Github Repository";
-								y.Value = "[Github](https://github.com/TheRealDreamzy/RicaBotpaw)";
-								y.IsInline = false;
 							})
 							.AddField(y =>
 							{
@@ -518,12 +507,8 @@ namespace RicaBotpaw.Modules.Public
 							});
 
 						await this.ReplyAsync("", embed: embed);
-						await BotCooldown.Cooldown();
+						await UserCooldown.PutInCooldown(user);
 					}
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
 				}
 			}
 			else
@@ -560,10 +545,11 @@ namespace RicaBotpaw.Modules.Public
 		{
 			var g = Context.Guild as SocketGuild;
 			await CheckEnabledPublicModule(g);
+			await CheckIfUserIsOnCooldown(user);
 
 			if (modEnable == 1)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				if (UserCooldown.UserIsInCooldown == false)
 				{
 					var application = await Context.Client.GetApplicationInfoAsync();
 					var thumbnailUrl = user.GetAvatarUrl(ImageFormat.Png);
@@ -591,22 +577,18 @@ namespace RicaBotpaw.Modules.Public
 					var C = us.Status;
 					var CC = us.JoinedAt;
 					var O = us.Game;
-					embed.Title = $"**{us.Username}** Information";
+					embed.Title = $"**{us.Username}'s** Information";
 					embed.Description =
 						$"Username: **{D}**\n" +
 						$"Discriminator: **{A}**\n" +
 						$"User ID: **{T}**\n" +
-						$"Created at: **{S}**\n" +
+						$"Account created at: **{S}**\n" +
 						$"Current Status: **{C}**\n" +
 						$"Joined server at: **{CC}**\n" +
 						$"Playing: **{O}**";
 
 					await ReplyAsync("", false, embed.Build());
-					await BotCooldown.Cooldown();
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
+					await UserCooldown.PutInCooldown(user);
 				}
 			}
 			else
@@ -634,11 +616,13 @@ namespace RicaBotpaw.Modules.Public
 		public async Task GuildInfo()
 		{
 			var g = Context.Guild as SocketGuild;
+			var user = Context.User;
 			await CheckEnabledPublicModule(g);
+			await CheckIfUserIsOnCooldown(user);
 
 			if (modEnable == 1)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				if (UserCooldown.UserIsInCooldown == false)
 				{
 					EmbedBuilder embedBuilder;
 					embedBuilder = new EmbedBuilder();
@@ -672,11 +656,7 @@ namespace RicaBotpaw.Modules.Public
 						$"Members: **{X}\n**" +
 						$"Connection state: **{Z}\n\n**";
 					await ReplyAsync("", false, embedBuilder);
-					await BotCooldown.Cooldown();
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
+					await UserCooldown.PutInCooldown(user);
 				}
 			}
 			else
@@ -708,7 +688,10 @@ namespace RicaBotpaw.Modules.Public
 		public async Task
 			dm([Remainder] string dm) // Exempt from the configuration as this is an essential feature to contact the bot dev.
 		{
-			if (BotCooldown.isCooldownRunning == false)
+			var user1 = Context.User;
+			await CheckIfUserIsOnCooldown(user1);
+
+			if (UserCooldown.UserIsInCooldown == false)
 			{
 				var myId = Context.User.Mention;
 				if (me == null)
@@ -738,11 +721,7 @@ namespace RicaBotpaw.Modules.Public
 				await message.SendMessageAsync("", false, embed);
 				embed.Description = $"You have sent a message to {me}. He will read the message soon.";
 				await Context.Channel.SendMessageAsync("", false, embed);
-				await BotCooldown.Cooldown();
-			}
-			else
-			{
-				await ReplyAsync(BotCooldown.cooldownMsg);
+				await UserCooldown.PutInCooldown(user1);
 			}
 		}
 
@@ -750,22 +729,21 @@ namespace RicaBotpaw.Modules.Public
 		/// Prints the bots changelog inside the chat
 		/// </summary>
 		/// <returns></returns>
-		[Command("changelog", RunMode = RunMode.Async)]
-		[Remarks("Returns Ricas Changelog which includes her version")]
-		public async Task
-			Changelog() // Exempt from the configuration as this is an essential update command containing every change
-		{
-			if (BotCooldown.isCooldownRunning == false)
-			{
-				await ReplyAsync(
-					System.IO.File.ReadAllText(@"changelog.txt"));
-				await BotCooldown.Cooldown();
-			}
-			else
-			{
-				await ReplyAsync(BotCooldown.cooldownMsg);
-			}
-		}
+		// [Command("changelog", RunMode = RunMode.Async)]
+		// [Remarks("Returns Ricas Changelog which includes her version")]
+		/* public async Task Changelog()
+		 * {
+		 *  var user = Context.User;
+		 *	await CheckIfUserIsOnCooldown(user);
+		 *
+		 *	if (UserCooldown.UserIsInCooldown == false)
+		 *	{
+		 *		await ReplyAsync(System.IO.File.ReadAllText(@"changelog.txt"));
+		 *		await UserCooldown.PutInCooldown(user);
+		 *	}
+		 */
+
+
 
 
 		// Data stuff
@@ -778,10 +756,11 @@ namespace RicaBotpaw.Modules.Public
 		{
 			var u = Context.User as SocketUser;
 			await CheckExistingJsonUser(u);
+			await CheckIfUserIsOnCooldown(u);
 
 			if (userExists == 1)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				if (UserCooldown.UserIsInCooldown == false)
 				{
 					var fileText = File.ReadAllText($"./Data/users/{u.Id.ToString()}_{u.Username.ToString()}.rbuser");
 					var data = JsonConvert.DeserializeObject<DiscordUserJSON>(fileText);
@@ -801,11 +780,7 @@ namespace RicaBotpaw.Modules.Public
 
 					await Context.Channel.SendMessageAsync("", false, embed);
 
-					await BotCooldown.Cooldown();
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
+					await UserCooldown.PutInCooldown(u);
 				}
 			}
 			else if (userExists == 0)
@@ -822,13 +797,11 @@ namespace RicaBotpaw.Modules.Public
 		{
 			if (u == null)
 			{
-				u = Context.User;
 				await CheckExistingJsonUser(u);
 
 				if (userExists == 1)
 				{
-					if (BotCooldown.isCooldownRunning == false)
-					{
+					
 						if (u.Id == 112559794543468544)
 						{
 							var fileName = $"{u.Id}_{u.Username}";
@@ -862,11 +835,7 @@ namespace RicaBotpaw.Modules.Public
 						{
 							await ReplyAsync("Only EnK can add tokens.");
 						}
-					}
-					else
-					{
-						await ReplyAsync(BotCooldown.cooldownMsg);
-					}
+					
 				}
 			}
 			else
@@ -875,8 +844,6 @@ namespace RicaBotpaw.Modules.Public
 
 				if (userExists == 1)
 				{
-					if (BotCooldown.isCooldownRunning == false)
-					{
 						if (u.Id == 112559794543468544)
 						{
 							var fileName = $"{u.Id}_{u.Username}";
@@ -910,16 +877,101 @@ namespace RicaBotpaw.Modules.Public
 						{
 							await ReplyAsync("Only EnK can add tokens.");
 						}
-					}
-					else
-					{
-						await ReplyAsync(BotCooldown.cooldownMsg);
-					}
 				}
 			}
 		}
 
 		// Money
+
+		[Command("addMoney", RunMode = RunMode.Async)]
+		[Remarks("(Botowner only) Adds some money.")]
+		public async Task MoneyAdd(long money, [Remainder] IUser u = null)
+		{
+			if (u == null)
+			{
+				u = Context.User;
+				await CheckExistingJsonUser(u);
+
+				if (userExists == 1)
+				{
+					
+						if (u.Id == 112559794543468544)
+						{
+							var fileName = $"{u.Id}_{u.Username}";
+							var fileText = File.ReadAllText($"./Data/users/{fileName}.rbuser");
+							var data = JsonConvert.DeserializeObject<DiscordUserJSON>(fileText);
+							var guidToKeep = data.UserGuid;
+							var userID = data.UserId;
+							var userName = data.Username;
+							var tokensToKeep = data.Tokens;
+							var oldMoneyValue = data.Money;
+							var newMoneyValue = data.Money + money;
+
+							DiscordUserJSON data2 = new DiscordUserJSON
+							{
+								UserId = userID,
+								Username = userName,
+								Tokens = tokensToKeep,
+								Money = newMoneyValue,
+								UserGuid = guidToKeep
+							};
+
+							using (StreamWriter file = File.CreateText($"./Data/users/{fileName}.rbuser"))
+							{
+								var fileText2 = JsonConvert.SerializeObject(data2);
+								await file.WriteAsync(fileText2);
+								await Context.Channel.SendMessageAsync(
+									$"Tokens added to user {u.Username}!\nOld token value: {oldMoneyValue}\nNew token value: {newMoneyValue}");
+							}
+						}
+						else
+						{
+							await ReplyAsync("Only EnK can add money manually.");
+						}
+				}
+			}
+			else
+			{
+				await CheckExistingJsonUser(u);
+
+				if (userExists == 1)
+				{
+						if (u.Id == 112559794543468544)
+						{
+							var fileName = $"{u.Id}_{u.Username}";
+							var fileText = File.ReadAllText($"./Data/users/{fileName}.rbuser");
+							var data = JsonConvert.DeserializeObject<DiscordUserJSON>(fileText);
+							var guidToKeep = data.UserGuid;
+							var userID = data.UserId;
+							var userName = data.Username;
+							var tokensToKeep = data.Tokens;
+							var oldMoneyValue = data.Money;
+							var newMoneyValue = data.Money + money;
+
+							DiscordUserJSON data2 = new DiscordUserJSON
+							{
+								UserId = userID,
+								Username = userName,
+								Money = newMoneyValue,
+								Tokens = tokensToKeep,
+								UserGuid = guidToKeep
+							};
+
+							using (StreamWriter file = File.CreateText($"./Data/users/{fileName}.rbuser"))
+							{
+								var fileText2 = JsonConvert.SerializeObject(data2);
+								await file.WriteAsync(fileText2);
+								await Context.Channel.SendMessageAsync(
+									$"Tokens added to user {u.Username}!\nOld token value: {oldMoneyValue}\nNew token value: {newMoneyValue}");
+							}
+						}
+						else
+						{
+							await ReplyAsync("Only EnK can add tokens.");
+						}
+				}
+			}
+		}
 
 		/// <summary>
 		/// Gets the best urban definition based on the term the user has given.
@@ -931,11 +983,13 @@ namespace RicaBotpaw.Modules.Public
 		public async Task Urban([Remainder] string term = null)
 		{
 			var g = Context.Guild as SocketGuild;
+			var user = Context.User;
 			await CheckEnabledPublicModule(g);
+			await CheckIfUserIsOnCooldown(user);
 
 			if (modEnable == 1)
 			{
-				if (BotCooldown.isCooldownRunning == false)
+				if (UserCooldown.UserIsInCooldown == false)
 				{
 					UrbanService client = new UrbanService();
 					var data = await client.Data($"{term}");
@@ -956,11 +1010,7 @@ namespace RicaBotpaw.Modules.Public
 					
 
 					await ReplyAsync("", false, embed: embed);
-					await BotCooldown.Cooldown();
-				}
-				else
-				{
-					await ReplyAsync(BotCooldown.cooldownMsg);
+					await UserCooldown.PutInCooldown(user);
 				}
 			}
 			else
