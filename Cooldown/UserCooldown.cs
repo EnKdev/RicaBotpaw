@@ -14,15 +14,15 @@ namespace RicaBotpaw.Cooldown
 		private static Timer CooldownTimer;
 		public static bool UserIsInCooldown;
 
-		public static async Task PutInCooldown([Remainder] IUser u)
+		public static void PutInCooldown([Remainder] IUser u)
 		{
 			UserOnCooldown = u;
 			UsersInCooldown.Add(UserOnCooldown);
 			Console.WriteLine($"Started individual countdown for User {UserOnCooldown.Username} [{UserOnCooldown.Id}]");
-			await StartUserCooldown(u);
+			StartUserCooldown(u);
 		}
 
-		private static async Task StartUserCooldown(IUser u)
+		private static void StartUserCooldown(IUser u)
 		{
 			CooldownTimer = new Timer
 			{

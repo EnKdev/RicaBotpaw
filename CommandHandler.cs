@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using RicaBotpaw.Config;
 using RicaBotpaw.TypeReaders;
 
 namespace RicaBotpaw
@@ -50,18 +51,14 @@ namespace RicaBotpaw
 			"Simulator Simulator 2018",
 			"Being a construction site",
 			"Rut simulator 2018",
-
+			"Being a spooky thing since 2018!",
+			"#BlameRex"
 		};
 
 		/// <summary>
 		/// The random status class instance the bot uses to pick it's random status message
 		/// </summary>
 		private Random randStatus = new Random();
-
-		/// <summary>
-		/// The random status class instance the bot uses to pick it's random availability status
-		/// </summary>
-		private Random randStatStatus = new Random();
 
 		/// <summary>
 		/// This "installs" all modules into the handler and registers their commands
@@ -110,7 +107,7 @@ namespace RicaBotpaw
 		/// <returns></returns>
 		public async Task onReady()
 		{
-			await _client.SetGameAsync("For help, use ;help"); // Default first status.
+			await _client.SetGameAsync($"Rica Botpaw {RBConfig.BotVersion} | {RBConfig.BotSubVersionName}"); // Default first status.
 			await CheckTime();
 		}
 

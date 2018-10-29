@@ -6,6 +6,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using RicaBotpaw.Cooldown;
+using RicaBotpaw.Libs;
 
 namespace RicaBotpaw.Modules.Data
 {
@@ -66,10 +67,12 @@ namespace RicaBotpaw.Modules.Data
 			{
 				var fileName = $"{u.Id}_{u.Username}";
 				var fileText = File.ReadAllText($"./Data/users/{fileName}.rbuser");
-				var data = JsonConvert.DeserializeObject<DiscordUserJSON>(fileText);
+				var fileText1 = EncoderUtils.B64Decode(fileText);
+				var data = JsonConvert.DeserializeObject<DiscordUserJSON>(fileText1);
+				var now = DateTime.Now;
 				var daily = data.Daily;
 
-				if (DateTime.Now.Day > daily.Day)
+				if (now.Date > daily.Date)
 				{
 					Console.WriteLine("Daily passed, new day has started since the last time the command has been triggered.");
 					hasDailyPassed = 1;
@@ -89,9 +92,10 @@ namespace RicaBotpaw.Modules.Data
 		public async Task DailyTask([Remainder] IUser u = null)
 		{
 			if (u == null) u = Context.User;
+			var u1 = Context.Message.Author;
 			await CheckExistingJsonUser(u);
 			await CheckDaily(u);
-			await CheckIfUserIsOnCooldown(u);
+			await CheckIfUserIsOnCooldown(u1);
 
 			if (userExists == 1)
 			{
@@ -101,14 +105,15 @@ namespace RicaBotpaw.Modules.Data
 					{
 						var fileName = $"{u.Id}_{u.Username}";
 						var fileText = File.ReadAllText($"./Data/users/{fileName}.rbuser");
-						var data = JsonConvert.DeserializeObject<DiscordUserJSON>(fileText);
+						var fileText1 = EncoderUtils.B64Decode(fileText);
+						var data = JsonConvert.DeserializeObject<DiscordUserJSON>(fileText1);
 						var mons = 200;
 						var guidToKeep = data.UserGuid;
 						var userID = data.UserId;
 						var userName = data.Username;
 						var tokensToKeep = data.Tokens;
 						var oldMoneyValue = data.Money;
-						var newMoneyValue = data.Money + mons;
+						var newMoneyValue = oldMoneyValue + mons;
 						DateTime now = DateTime.Now;
 
 						DiscordUserJSON data2 = new DiscordUserJSON
@@ -124,12 +129,13 @@ namespace RicaBotpaw.Modules.Data
 						using (StreamWriter file = File.CreateText($"./Data/users/{fileName}.rbUser"))
 						{
 							var fileText2 = JsonConvert.SerializeObject(data2);
-							await file.WriteAsync(fileText2);
+							var fileText3 = EncoderUtils.B64Encode(fileText2);
+							await file.WriteAsync(fileText3);
 							await Context.Channel.SendMessageAsync(
 								$"{u.Mention}, you got your daily {mons}$!\nYour new balance is now {newMoneyValue}!");
 						}
 
-						await UserCooldown.PutInCooldown(u);
+						UserCooldown.PutInCooldown(u1);
 					}
 				}
 			}

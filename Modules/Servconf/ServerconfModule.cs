@@ -6,6 +6,7 @@ using Discord;
 using Discord.Commands;
 using Newtonsoft.Json;
 using RicaBotpaw.Cooldown;
+using RicaBotpaw.Libs;
 using RicaBotpaw.Logging;
 
 namespace RicaBotpaw.Modules
@@ -45,9 +46,9 @@ namespace RicaBotpaw.Modules
 		[Command("conf", RunMode = RunMode.Async)]
 		[Remarks("Server Configurations!")]
 		[RequireUserPermission(GuildPermission.Administrator)]
-		public async Task Conf(int publicFlag, int imagingFlag, int nsfwFlag, int sfwFlag, int randImgFlag, int hashFlag, [Remainder] IGuild g = null)
+		public async Task Conf(int publicFlag, int imagingFlag, int nsfwFlag, int sfwFlag, int randImgFlag, [Remainder] IGuild g = null)
 		{
-			var user = Context.User;
+			var user = Context.Message.Author;
 			await CheckIfUserIsOnCooldown(user);
 
 			if (UserCooldown.UserIsInCooldown == false)
@@ -66,7 +67,6 @@ namespace RicaBotpaw.Modules
 						ModNSFW = nsfwFlag,
 						ModSFW = sfwFlag,
 						ModRandImg = randImgFlag,
-						ModHash = hashFlag
 					};
 
 					// Config.ServerModulesConfig sMC = new ServerModulesConfig()
@@ -83,11 +83,12 @@ namespace RicaBotpaw.Modules
 					using (StreamWriter file = File.CreateText($"./Data/serv_configs/{name}.rconf"))
 					{
 						var fileText = JsonConvert.SerializeObject(mod);
-						await file.WriteAsync(fileText);
-						await ReplyAsync($"Serverconfig file {name}.rconf created at /serv_configs");
+						var fileText1 = EncoderUtils.B64Encode(fileText);
+						await file.WriteAsync(fileText1);
+						await ReplyAsync($"Serverconfig file {name}.rconf created at Data/serv_configs");
 					}
 
-					await UserCooldown.PutInCooldown(user);
+					UserCooldown.PutInCooldown(user);
 				}
 			}
 		}
@@ -103,7 +104,7 @@ namespace RicaBotpaw.Modules
 		[Remarks("This checks the modules for a guild")]
 		public async Task ModCheck([Remainder] IGuild g = null)
 		{
-			var user = Context.User;
+			var user = Context.Message.Author;
 			await CheckIfUserIsOnCooldown(user);
 
 			if (UserCooldown.UserIsInCooldown == false)
@@ -120,14 +121,14 @@ namespace RicaBotpaw.Modules
 					}
 					
 					var fileText = File.ReadAllText($"./Data/serv_configs/{name}.rconf");
-					var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
+					var fileText1 = EncoderUtils.B64Decode(fileText);
+					var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText1);
 
 					publicModule = mods.ModPub;
 					imagingModule = mods.ModImg;
 					nsfwFeatures = mods.ModNSFW;
 					sfwFeatures = mods.ModSFW;
 					randImgFeatures = mods.ModRandImg;
-					hashFeatures = mods.ModHash;
 					
 
 					EmbedBuilder embed = new EmbedBuilder
@@ -138,17 +139,15 @@ namespace RicaBotpaw.Modules
 						Description = "Short notice: 0 = disabled, 1 = enabled.\n" +
 						              $"Public Commands (PublicModule): {publicModule}\n" +
 						              $"Imaging Commands (ImagingModule): {imagingModule}\n" +
-						              $"Game Commands (GamesModule): {gameModule}\n" +
 									  $"NSFW Image Searching (NSFWFeatures): {nsfwFeatures}\n" +
 									  $"SFW Image Searching (SFWFeatures): {sfwFeatures}\n" +
-									  $"Random Images (RandImgFeatures): {randImgFeatures}\n" +
-									  $"Hashing Features (HashFeatures): {hashFeatures}"
+									  $"Random Images (RandImgFeatures): {randImgFeatures}"
 					};
 
 					await ReplyAsync("", false, embed);
 				}
 
-				await UserCooldown.PutInCooldown(user);
+				UserCooldown.PutInCooldown(user);
 			}
 		}
 	}

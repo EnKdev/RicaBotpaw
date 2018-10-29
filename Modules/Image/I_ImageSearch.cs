@@ -14,6 +14,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.IO;
 using RicaBotpaw.Cooldown;
+using RicaBotpaw.Libs;
 
 namespace RicaBotpaw.Modules.Image
 {
@@ -44,7 +45,8 @@ namespace RicaBotpaw.Modules.Image
 			}
 
 			var fileText = File.ReadAllText($"./Data/serv_configs/{g.Id.ToString()}_config.rconf");
-			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
+			var fileText1 = EncoderUtils.B64Decode(fileText);
+			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText1);
 
 			if (mods.Guild != g.Id)
 			{
@@ -87,7 +89,8 @@ namespace RicaBotpaw.Modules.Image
 			}
 
 			var fileText = File.ReadAllText($"./Data/serv_configs/{g.Id.ToString()}_config.rconf");
-			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
+			var fileText1 = EncoderUtils.B64Decode(fileText);
+			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText1);
 
 			if (mods.Guild != g.Id)
 			{
@@ -109,7 +112,7 @@ namespace RicaBotpaw.Modules.Image
 		[RequireNsfw]
 		public async Task GetNSFWImage([Remainder] string input)
 		{
-			var user = Context.User as SocketUser;
+			var user = Context.Message.Author as SocketUser;
 			var g = Context.Guild as SocketGuild;
 			await CheckNSFWFeatureEnabled(g);
 			await CheckIfUserIsOnCooldown(user);
@@ -170,7 +173,7 @@ namespace RicaBotpaw.Modules.Image
 
 							var msg = await user.GetOrCreateDMChannelAsync();
 							await msg.SendMessageAsync($"Here is your yiff! [Tags: {input}]\n" + YiffImage);
-							await UserCooldown.PutInCooldown(user);
+							UserCooldown.PutInCooldown(user);
 						}
 						catch (Exception e)
 						{
@@ -190,7 +193,7 @@ namespace RicaBotpaw.Modules.Image
 								new EmbedFooterBuilder().WithText("E621/E926 API Request failed!"));
 
 							await ownerNotification.SendMessageAsync("", false, embed);
-							await UserCooldown.PutInCooldown(user);
+							UserCooldown.PutInCooldown(user);
 						}
 					}
 				}
@@ -213,7 +216,7 @@ namespace RicaBotpaw.Modules.Image
 		[Remarks("Same as ;e621, but just clean")]
 		public async Task GetSFWImage([Remainder] string input)
 		{
-			var user = Context.User as SocketUser;
+			var user = Context.Message.Author as SocketUser;
 			var ch = Context.Channel as SocketChannel;
 			var g = Context.Guild as SocketGuild;
 			await CheckSFWFeatureEnabled(g);
@@ -274,7 +277,7 @@ namespace RicaBotpaw.Modules.Image
 								}
 							}
 							await Context.Channel.SendMessageAsync(user.Mention + $", Here is your image! Tags: [{input}]\n" + FurImage);
-							await UserCooldown.PutInCooldown(user);
+							UserCooldown.PutInCooldown(user);
 						}
 						catch (Exception e)
 						{
@@ -294,7 +297,7 @@ namespace RicaBotpaw.Modules.Image
 								new EmbedFooterBuilder().WithText("E621/E926 API Request failed!"));
 
 							await ownerNotification.SendMessageAsync("", false, embed);
-							await UserCooldown.PutInCooldown(user);
+							UserCooldown.PutInCooldown(user);
 						}
 					}
 				}

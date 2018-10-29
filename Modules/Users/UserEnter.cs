@@ -5,6 +5,7 @@ using Discord;
 using Discord.Commands;
 using Newtonsoft.Json;
 using RicaBotpaw.Cooldown;
+using RicaBotpaw.Libs;
 using RicaBotpaw.Modules.Data;
 
 namespace RicaBotpaw.Modules.Users
@@ -44,7 +45,8 @@ namespace RicaBotpaw.Modules.Users
 	    public async Task EnterJson([Remainder] IUser u = null)
 		{
 			if (u == null) u = Context.User;
-			await CheckIfUserIsOnCooldown(u);
+			var u1 = Context.Message.Author;
+			await CheckIfUserIsOnCooldown(u1);
 
 		    if (UserCooldown.UserIsInCooldown == false)
 		    {
@@ -57,17 +59,19 @@ namespace RicaBotpaw.Modules.Users
 						Username = u.Username,
 						Money = 400,
 						Tokens = 400,
-						UserGuid = guid
+						UserGuid = guid,
+						Daily = DateTime.Now
 					};
 
 				    using (StreamWriter file = File.CreateText($"./Data/users/{fileName}.rbuser"))
 				    {
 					    var fileText = JsonConvert.SerializeObject(data);
-					    await file.WriteAsync(fileText);
-					    await ReplyAsync($"User file {fileName}.rbuser created at /users");
+					    var fileText1 = EncoderUtils.B64Encode(fileText);
+					    await file.WriteAsync(fileText1);
+					    await ReplyAsync($"User file {fileName}.rbuser created at /Data/users");
 				    }
 
-			    await UserCooldown.PutInCooldown(u);
+			    UserCooldown.PutInCooldown(u1);
 		    }
 	    }
 	}

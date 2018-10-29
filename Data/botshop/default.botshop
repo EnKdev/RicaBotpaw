@@ -1,0 +1,75 @@
+﻿{
+  "shopName": "defaultShop",
+  "id": "sh_def",
+  "contingent": {
+    "item": {
+      "id": 1,
+      "isLimited": false,
+      "name": "Daily boost",
+      "desc": "Grants you a daily income boost",
+      "cost": 200
+    },
+    "item": {
+      "id": 2,
+      "isLimited": true,
+      "limitAmount": 1,
+      "name": "Shop license",
+      "desc": "Grants you to have your own shop.\nThe income from this shop always goes directly to you.",
+      "cost": 500
+    },
+    "item": {
+      "id": 3,
+      "isLimited": true,
+      "limitAmount": 1,
+      "name": "Copper Badge",
+      "desc": "Adds a copper badge to your inventory.\nYou need 2500 tokens and 10000 dollars to be able to buy this",
+      "reqTokens": 2500,
+      "cost": 10000
+    },
+    "item": {
+      "id": 4,
+      "isLimited": true,
+      "limitAmount": 1,
+      "name": "Bronze Badge",
+      "desc": "Adds a bronze badge to your inventory.\nYou need 5000 tokens and 25000 dollars to be able to buy this",
+      "reqTokens": 5000,
+      "cost": 25000
+    },
+    "item": {
+      "id": 5,
+      "isLimited": true,
+      "limitAmount": 1,
+      "name": "Silver Badge",
+      "desc": "Adds a silver badge to your inventory.\nYou need 10000 tokens and 75000 dollars to be able to buy this",
+      "reqTokens": 10000,
+      "cost": 75000
+    },
+    "item": {
+      "id": 6,
+      "isLimited": true,
+      "limitAmount": 1,
+      "name": "Gold Badge",
+      "desc": "Adds a gold badge to your inventory.\nYou need 30000 tokens and 225000 dollars to be able to buy this",
+      "reqTokens": 30000,
+      "cost": 225000
+    },
+    "item": {
+      "id": 7,
+      "isLimited": true,
+      "limitAmount": 1,
+      "name": "Platinum Badge",
+      "desc": "Adds a platinum badge to your inventory.\nYou need 100000 tokens and 1 million dollars to be able to buy this",
+      "reqTokens": 100000,
+      "cost": 1000000
+    },
+    "item": {
+      "id": 8,
+      "isLimited": true,
+      "limitAmount": 1,
+      "name": "Diamond Badge",
+      "desc": "Adds a diamond badge to your inventory.\nYou need 500000 tokens and 10 million dollars to be able to buy this",
+      "reqTokens": 500000,
+      "cost": 10000000 
+    }
+  }
+}

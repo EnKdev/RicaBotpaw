@@ -1,0 +1,16 @@
+{
+  "userID": 012345678901234,
+  "username": "Animdude",
+  "inventory": {
+    "badges": [
+      "bdg_BugFinder",
+      "bdg_SpecialBoi"
+    ],
+    "consumables": [
+      "csm_DailyBoost"
+    ],
+    "titles": [
+      "t_Best Bug Finder by Accident!"
+    ] 
+  } 
+}

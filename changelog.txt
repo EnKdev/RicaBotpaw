@@ -1,37 +1,14 @@
-﻿**__Rica Botpaw - Version 2.0.0-pre3__**
+﻿**__Rica Botpaw - Version 2.0.0-pre6__**
 ---------------------------
-This is a highly experimental version, so I expect things to break!
-If things work out though, then I can say goodbye to the old bot cooldown method!
-We also have to part ways from some features though... it's not like they would've clashed with something new nonetheless.
-Also, An oldie returns! More in the patchnotes.
+-The way files are now stored has gotten a tad bit more secure as I added a little bit of Encryption to the contents, as well as some other encryption methods.
+-- Due to this, every file has to be remade, so re-register now, otherwise it probably will error out.
+-- (With this, I mean your user, inventory and guild config files.)
+-Rica's default first status is now as followed: Rica Botpaw {RBConfig.BotVersion} | {RBConfig.BotSubVersionName}
 ---------------------------
-- Replaced the old Bot cooldown method with a new method which counts per user (In other words: A user cooldown)
--- Unfortunately, we had to get rid of the games and certain other features
--- A more specific explaination on this is down below.
-
-- ;random has a new (but old) face again! The random cats are back! Simply type `;random cat` in order to receive your random cat!
-- There is now a daily feature which works each day, whenever my PC had to shut-down as well! Isn't that neat?
----------------------------
-Current status:
-Replacing bot-wide cooldown with a user-based cooldown: TESTING
+TO-DO:
+Replacing bot-wide cooldown with a user-based cooldown: POST-TESTING [Testing a hotfix...]
 Daily-feature: DONE
 Migrating from an SQL Database to a JSON Backend: DONE
-Using the JSON Backend for Botshops and User Inventories: TBA
----------------------------
-Alright, so this is the part where I get a bit into the details now on why I removed the hashing commands and the games.
-The thing is:
-At times like these where my work evolves, I have to make some decisions every now and then which can either be hard
-or very easy.
-Sometimes these decisions consist of me removing certain functions.
-I usually only remove these things though if they
-A) Start to clash with the new code structure and certain backend features like the JSON Backend of how the bot handles it's data
-or
-B) Isn't just interresting to do or just blatantly boring to be in a general-purpose discord bot.
-In this case, both of these reasons apply to the Hashing Module (Reason B) and the Games Module (Reason A)
-It is my goal with this bot to achieve something mighty for just me alone.
-If there are certain problems I cannot just easily avoid at this time as I am still going through a whole lot of learning, then it has to go this way.
-I am sorry if there are people who enjoyed these games or commands, but sometimes, we all have to decide against one or another in favor for your own visions.
-I hope you all understand this decision of mine. At least we got the random cat back, eh?
-I'll see you all in the next update/pre-release/i don't even know anymore at this point.
-Most sincerely
--EnK
+Botshop: EARLY-TEST-STAGE (Non-Public)
+User Inventories: TESTING [50%]
+Test file encodings and decodings: TESTING [0%]

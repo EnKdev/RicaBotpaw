@@ -11,7 +11,7 @@
 		/// <value>
 		///     The bot version.
 		/// </value>
-		public static string BotVersion = "2.0.0-pre3";
+		public static string BotVersion = "2.0.0-pre6";
 
 		/// <summary>
 		/// The bots sub version name
@@ -19,7 +19,7 @@
 		/// <value>
 		/// The sub version name
 		/// </value>
-		public static string BotSubVersionName = "Neon";
+		public static string BotSubVersionName = "Spooky";
 
 		/// <summary>
 		///     Contains the bots build revision
@@ -27,7 +27,7 @@
 		/// <value>
 		///     The build revision.
 		/// </value>
-		public static string BuildRevision = "2008180457_RB_200pre3";
+		public static string BuildRevision = "301020180006_RB_200pre6";
 
 		/// <summary>
 		///     Contains the bots author

@@ -10,6 +10,7 @@ using Discord;
 using System.IO;
 using Newtonsoft.Json;
 using RicaBotpaw.Cooldown;
+using RicaBotpaw.Libs;
 
 namespace RicaBotpaw.Modules.Image
 {
@@ -37,7 +38,8 @@ namespace RicaBotpaw.Modules.Image
 			}
 
 			var fileText = File.ReadAllText($"./Data/serv_configs/{g.Id.ToString()}_config.rconf");
-			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText);
+			var fileText1 = EncoderUtils.B64Decode(fileText);
+			var mods = JsonConvert.DeserializeObject<Config.Modules>(fileText1);
 
 			if (mods.Guild != g.Id)
 			{
@@ -77,8 +79,9 @@ namespace RicaBotpaw.Modules.Image
 		public async Task RandomImage([Remainder] string species = null)
 		{
 			var g = Context.Guild as SocketGuild;
-			var user = Context.User;
+			var user = Context.Message.Author;
 			await CheckRandomImageFeatureEnabled(g);
+			await CheckIfUserIsOnCooldown(user);
 
 			if (featEnable == 1)
 			{
@@ -105,7 +108,7 @@ namespace RicaBotpaw.Modules.Image
 								string FoxImage = json["file"].ToString();
 
 								await ReplyAsync(FoxImage);
-								await UserCooldown.PutInCooldown(user);
+								UserCooldown.PutInCooldown(user);
 							}
 							break;
 						case "wolf":
@@ -127,7 +130,7 @@ namespace RicaBotpaw.Modules.Image
 								string WolfImage = json["file"].ToString();
 
 								await ReplyAsync(WolfImage);
-								await UserCooldown.PutInCooldown(user);
+								UserCooldown.PutInCooldown(user);
 							}
 							break;
 						case "axolotl":
@@ -149,7 +152,7 @@ namespace RicaBotpaw.Modules.Image
 								string AxoImage = json["file"].ToString();
 
 								await ReplyAsync(AxoImage);
-								await UserCooldown.PutInCooldown(user);
+								UserCooldown.PutInCooldown(user);
 							}
 							break;
 						case "snake":
@@ -171,7 +174,7 @@ namespace RicaBotpaw.Modules.Image
 								string SnakeImage = json["file"].ToString();
 
 								await ReplyAsync(SnakeImage);
-								await UserCooldown.PutInCooldown(user);
+								UserCooldown.PutInCooldown(user);
 							}
 							break;
 						// case "bunny":
@@ -215,12 +218,12 @@ namespace RicaBotpaw.Modules.Image
 								string CatImage = json["file"].ToString();
 
 								await ReplyAsync(CatImage);
-								await UserCooldown.PutInCooldown(user);
+								UserCooldown.PutInCooldown(user);
 							}
 							break;
 						default:
-							await ReplyAsync("Invalid input detected. The only species supported are:\n`fox, wolf, axolotl, snake`");
-							await UserCooldown.PutInCooldown(user);
+							await ReplyAsync("Invalid input detected. The only species supported are:\n`fox, wolf, axolotl, snake, cat`");
+							UserCooldown.PutInCooldown(user);
 							return;
 
 					}
