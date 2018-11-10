@@ -1,4 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿// DevStopLogJSON.cs
+// This class contains each needed JSON property so a devstop log file
+// In Json Format under the file extension .rblog can be written.
+
+using Newtonsoft.Json;
 
 namespace RicaBotpaw.Logging
 {

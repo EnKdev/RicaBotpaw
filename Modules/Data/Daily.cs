@@ -1,12 +1,16 @@
-﻿using System;
+﻿// Daily.cs
+// This feels like this is the only interactive file inside this folder actually
+// It contains a weird, yet... somehow working implementation of a daily method.
+
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
 using Newtonsoft.Json;
-using RicaBotpaw.Cooldown;
+using RicaBotpaw.Attributes;
 using RicaBotpaw.Libs;
+using Measure = RicaBotpaw.Attributes.Measure;
 
 namespace RicaBotpaw.Modules.Data
 {
@@ -36,21 +40,6 @@ namespace RicaBotpaw.Modules.Data
 			{
 				await ReplyAsync($"Found user {u.Username.ToString()} in Json Database, reading file...");
 				userExists = 1;
-			}
-		}
-
-		private async Task CheckIfUserIsOnCooldown([Remainder] IUser u = null)
-		{
-			if (u == null) u = Context.User;
-
-			if (UserCooldown.UsersInCooldown.Contains(u))
-			{
-				UserCooldown.UserIsInCooldown = true;
-				ReplyAsync("You're in cooldown! Please wait 5 seconds!");
-			}
-			else
-			{
-				UserCooldown.UserIsInCooldown = false;
 			}
 		}
 
@@ -87,7 +76,7 @@ namespace RicaBotpaw.Modules.Data
 			}
 		}
 
-		[Command("daily", RunMode = RunMode.Async)]
+		[Command("daily", RunMode = RunMode.Async), RBRatelimit(1, 5, Measure.Seconds)]
 		[Remarks("Your daily payout man! Works whenever a new day has passed for the bot for each user.")]
 		public async Task DailyTask([Remainder] IUser u = null)
 		{
@@ -95,47 +84,41 @@ namespace RicaBotpaw.Modules.Data
 			var u1 = Context.Message.Author;
 			await CheckExistingJsonUser(u);
 			await CheckDaily(u);
-			await CheckIfUserIsOnCooldown(u1);
 
 			if (userExists == 1)
 			{
-				if (UserCooldown.UserIsInCooldown == false)
+				if (hasDailyPassed == 1)
 				{
-					if (hasDailyPassed == 1)
+					var fileName = $"{u.Id}_{u.Username}";
+					var fileText = File.ReadAllText($"./Data/users/{fileName}.rbuser");
+					var fileText1 = EncoderUtils.B64Decode(fileText);
+					var data = JsonConvert.DeserializeObject<DiscordUserJSON>(fileText1);
+					var mons = 200;
+					var guidToKeep = data.UserGuid;
+					var userID = data.UserId;
+					var userName = data.Username;
+					var tokensToKeep = data.Tokens;
+					var oldMoneyValue = data.Money;
+					var newMoneyValue = oldMoneyValue + mons;
+					DateTime now = DateTime.Now;
+
+					DiscordUserJSON data2 = new DiscordUserJSON
 					{
-						var fileName = $"{u.Id}_{u.Username}";
-						var fileText = File.ReadAllText($"./Data/users/{fileName}.rbuser");
-						var fileText1 = EncoderUtils.B64Decode(fileText);
-						var data = JsonConvert.DeserializeObject<DiscordUserJSON>(fileText1);
-						var mons = 200;
-						var guidToKeep = data.UserGuid;
-						var userID = data.UserId;
-						var userName = data.Username;
-						var tokensToKeep = data.Tokens;
-						var oldMoneyValue = data.Money;
-						var newMoneyValue = oldMoneyValue + mons;
-						DateTime now = DateTime.Now;
+						Daily = now,
+						Money = newMoneyValue,
+						Tokens = tokensToKeep,
+						UserGuid = guidToKeep,
+						UserId = userID,
+						Username = userName
+					};
 
-						DiscordUserJSON data2 = new DiscordUserJSON
-						{
-							Daily = now,
-							Money = newMoneyValue,
-							Tokens = tokensToKeep,
-							UserGuid = guidToKeep,
-							UserId = userID,
-							Username = userName
-						};
-
-						using (StreamWriter file = File.CreateText($"./Data/users/{fileName}.rbUser"))
-						{
-							var fileText2 = JsonConvert.SerializeObject(data2);
-							var fileText3 = EncoderUtils.B64Encode(fileText2);
-							await file.WriteAsync(fileText3);
-							await Context.Channel.SendMessageAsync(
-								$"{u.Mention}, you got your daily {mons}$!\nYour new balance is now {newMoneyValue}!");
-						}
-
-						UserCooldown.PutInCooldown(u1);
+					using (StreamWriter file = File.CreateText($"./Data/users/{fileName}.rbUser"))
+					{
+						var fileText2 = JsonConvert.SerializeObject(data2);
+						var fileText3 = EncoderUtils.B64Encode(fileText2);
+						await file.WriteAsync(fileText3);
+						await Context.Channel.SendMessageAsync(
+							$"{u.Mention}, you got your daily {mons}$!\nYour new balance is now {newMoneyValue}!");
 					}
 				}
 			}

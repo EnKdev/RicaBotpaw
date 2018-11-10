@@ -13,7 +13,7 @@ using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.IO;
-using RicaBotpaw.Cooldown;
+using RicaBotpaw.Attributes;
 using RicaBotpaw.Libs;
 
 namespace RicaBotpaw.Modules.Image
@@ -32,6 +32,7 @@ namespace RicaBotpaw.Modules.Image
 		private int gNoticeSent;
 		private int maxTries1;
 		private int maxTries2;
+		private Random random;
 
 		private async Task CheckNSFWFeatureEnabled([Remainder] IGuild g = null)
 		{
@@ -60,21 +61,6 @@ namespace RicaBotpaw.Modules.Image
 				return;
 			}
 			modEnableNSFW = 0;
-		}
-
-		private async Task CheckIfUserIsOnCooldown([Remainder] IUser u = null)
-		{
-			if (u == null) u = Context.User;
-
-			if (UserCooldown.UsersInCooldown.Contains(u))
-			{
-				UserCooldown.UserIsInCooldown = true;
-				ReplyAsync("You're in cooldown! Please wait 5 seconds!");
-			}
-			else
-			{
-				UserCooldown.UserIsInCooldown = false;
-			}
 		}
 
 		private async Task CheckSFWFeatureEnabled([Remainder] IGuild g = null)
@@ -106,7 +92,7 @@ namespace RicaBotpaw.Modules.Image
 			modEnableSFW = 0;
 		}
 
-		[Command("e621", RunMode = RunMode.Async)]
+		[Command("e621", RunMode = RunMode.Async), RBRatelimit(1, 5, Measure.Seconds)]
 		[Remarks(
 			"Searches for an image based on tags you give it. If no tags exist, it searches by a default tag queue. Has to be called inside an NSFW marked channel")]
 		[RequireNsfw]
@@ -115,12 +101,10 @@ namespace RicaBotpaw.Modules.Image
 			var user = Context.Message.Author as SocketUser;
 			var g = Context.Guild as SocketGuild;
 			await CheckNSFWFeatureEnabled(g);
-			await CheckIfUserIsOnCooldown(user);
 
 			if (modEnableNSFW == 1)
 			{
-				if (UserCooldown.UserIsInCooldown == false)
-				{
+				
 					GetImage:
 					using (var client = new HttpClient(new HttpClientHandler
 					{
@@ -133,7 +117,7 @@ namespace RicaBotpaw.Modules.Image
 							return;
 						}
 
-						client.DefaultRequestHeaders.Add("User-Agent", "RicaBotpaw/2.0.0-pre3 (by EnK_ on e621)");
+						client.DefaultRequestHeaders.Add("User-Agent", "RicaBotpaw/2.0.0-pre7 (by EnK_ on e621)");
 						string websiteUrl = "https://e621.net/post/index.json?tags=" + input + "%20order:random+rating:e&limit=1";
 						client.BaseAddress = new Uri(websiteUrl);
 						HttpResponseMessage res = client.GetAsync("").Result;
@@ -173,7 +157,6 @@ namespace RicaBotpaw.Modules.Image
 
 							var msg = await user.GetOrCreateDMChannelAsync();
 							await msg.SendMessageAsync($"Here is your yiff! [Tags: {input}]\n" + YiffImage);
-							UserCooldown.PutInCooldown(user);
 						}
 						catch (Exception e)
 						{
@@ -185,7 +168,11 @@ namespace RicaBotpaw.Modules.Image
 
 							var embed = new EmbedBuilder()
 							{
-								Color = new Color(255, 0, 0)
+								Color = new Color(
+									Convert.ToInt32(MathHelper.GetRandomIntegerInRange(random, 1, 255)),
+									Convert.ToInt32(MathHelper.GetRandomIntegerInRange(random, 1, 255)),
+									Convert.ToInt32(MathHelper.GetRandomIntegerInRange(random, 1, 255))
+								)
 							};
 
 							embed.Description = $"Failed to send Yiff to {user.Username}#{user.Discriminator}, Tags: {input}";
@@ -193,10 +180,9 @@ namespace RicaBotpaw.Modules.Image
 								new EmbedFooterBuilder().WithText("E621/E926 API Request failed!"));
 
 							await ownerNotification.SendMessageAsync("", false, embed);
-							UserCooldown.PutInCooldown(user);
 						}
 					}
-				}
+				
 			}
 			else
 			{
@@ -212,7 +198,7 @@ namespace RicaBotpaw.Modules.Image
 			}
 		}
 
-		[Command("e926", RunMode = RunMode.Async)]
+		[Command("e926", RunMode = RunMode.Async), RBRatelimit(1, 5, Measure.Seconds)]
 		[Remarks("Same as ;e621, but just clean")]
 		public async Task GetSFWImage([Remainder] string input)
 		{
@@ -220,85 +206,84 @@ namespace RicaBotpaw.Modules.Image
 			var ch = Context.Channel as SocketChannel;
 			var g = Context.Guild as SocketGuild;
 			await CheckSFWFeatureEnabled(g);
-			await CheckIfUserIsOnCooldown(user);
 			var maxTries = 0;
 
 			if (modEnableSFW == 1)
 			{
-				if (UserCooldown.UserIsInCooldown == false)
+				GetImage:
+				using (var client = new HttpClient(new HttpClientHandler
 				{
-					GetImage:
-					using (var client = new HttpClient(new HttpClientHandler
+					AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+				})) // Webbrowser
+				{
+					if (input == null)
 					{
-						AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-					})) // Webbrowser
+						await ReplyAsync("Please enter a queue to search for!");
+						return;
+					}
+
+					client.DefaultRequestHeaders.Add("User-Agent", "RicaBotpaw/2.0.0-pre7 (by EnK_ on e621)");
+					string websiteUrl = "https://e926.net/post/index.json?tags=" + input + "%20order:random&limit=1";
+					client.BaseAddress = new Uri(websiteUrl);
+					HttpResponseMessage res = client.GetAsync("").Result;
+					res.EnsureSuccessStatusCode();
+					string result = await res.Content.ReadAsStringAsync();
+					result = result.TrimStart(new char[] {'['}).TrimEnd(new char[] {']'});
+
+					try
 					{
-						if (input == null)
+						var json = JObject.Parse(result);
+
+						string FurImage = json["file_url"].ToString();
+						string Tags = json["tags"].ToString();
+
+						if (Tags.Contains("bestiality") || Tags.Contains("cub") || Tags.Contains("child") || Tags.Contains("equine") ||
+						    Tags.Contains("feral") || Tags.Contains("gumball") || Tags.Contains("horse") || Tags.Contains("human") ||
+						    Tags.Contains("jasonafex") || Tags.Contains("jay_naylor") || Tags.Contains("manyakis") ||
+						    Tags.Contains("micro_on_macro") || Tags.Contains("my_little_pony") || Tags.Contains("mlp") ||
+						    Tags.Contains("peeing") ||
+						    Tags.Contains("rating:safe") || Tags.Contains("r34") || Tags.Contains("scat") ||
+						    Tags.Contains("size_difference") || Tags.Contains("sex") || Tags.Contains("type:swf") ||
+						    Tags.Contains("vore") ||
+						    Tags.Contains("watersports")) // Restricted tags
 						{
-							await ReplyAsync("Please enter a queue to search for!");
-							return;
-						}
-
-						client.DefaultRequestHeaders.Add("User-Agent", "RicaBotpaw/2.0.0-pre3 (by EnK_ on e621)");
-						string websiteUrl = "https://e926.net/post/index.json?tags=" + input + "%20order:random&limit=1";
-						client.BaseAddress = new Uri(websiteUrl);
-						HttpResponseMessage res = client.GetAsync("").Result;
-						res.EnsureSuccessStatusCode();
-						string result = await res.Content.ReadAsStringAsync();
-						result = result.TrimStart(new char[] { '[' }).TrimEnd(new char[] { ']' });
-
-						try
-						{
-							var json = JObject.Parse(result);
-
-							string FurImage = json["file_url"].ToString();
-							string Tags = json["tags"].ToString();
-
-							if (Tags.Contains("bestiality") || Tags.Contains("cub") || Tags.Contains("child") || Tags.Contains("equine") ||
-								Tags.Contains("feral") || Tags.Contains("gumball") || Tags.Contains("horse") || Tags.Contains("human") ||
-								Tags.Contains("jasonafex") || Tags.Contains("jay_naylor") || Tags.Contains("manyakis") ||
-								Tags.Contains("micro_on_macro") || Tags.Contains("my_little_pony") || Tags.Contains("mlp") || Tags.Contains("peeing") ||
-								Tags.Contains("rating:safe") || Tags.Contains("r34") || Tags.Contains("scat") ||
-								Tags.Contains("size_difference") || Tags.Contains("sex") || Tags.Contains("type:swf") || Tags.Contains("vore") ||
-								Tags.Contains("watersports")) // Restricted tags
+							if (maxTries2 == 5)
 							{
-								if (maxTries2 == 5)
-								{
-									await Context.Channel.SendMessageAsync(
-										"Maximum tries exceeded. Please try again with a different queue or tags");
-									maxTries2 = 0;
-									return;
-								}
-								else
-								{
-									maxTries2++;
-									await Context.Channel.SendMessageAsync("Generated an invalid image, please wait while we're retrying...");
-									goto GetImage;
-								}
+								await Context.Channel.SendMessageAsync(
+									"Maximum tries exceeded. Please try again with a different queue or tags");
+								maxTries2 = 0;
+								return;
 							}
-							await Context.Channel.SendMessageAsync(user.Mention + $", Here is your image! Tags: [{input}]\n" + FurImage);
-							UserCooldown.PutInCooldown(user);
-						}
-						catch (Exception e)
-						{
-							Console.WriteLine(e);
-							await Context.Channel.SendMessageAsync("API request failed. Please try again.");
-
-							var application = await Context.Client.GetApplicationInfoAsync();
-							var ownerNotification = await application.Owner.GetOrCreateDMChannelAsync();
-
-							var embed = new EmbedBuilder()
+							else
 							{
-								Color = new Color(255, 0, 0)
-							};
-
-							embed.Description = $"Failed to send a picture to Channel {ch.Id} in Guild {g.Name}, Tags: {input}";
-							embed.WithFooter(
-								new EmbedFooterBuilder().WithText("E621/E926 API Request failed!"));
-
-							await ownerNotification.SendMessageAsync("", false, embed);
-							UserCooldown.PutInCooldown(user);
+								maxTries2++;
+								await Context.Channel.SendMessageAsync("Generated an invalid image, please wait while we're retrying...");
+								goto GetImage;
+							}
 						}
+						await Context.Channel.SendMessageAsync(user.Mention + $", Here is your image! Tags: [{input}]\n" + FurImage);
+					}
+					catch (Exception e)
+					{
+						Console.WriteLine(e);
+						await Context.Channel.SendMessageAsync("API request failed. Please try again.");
+
+						var application = await Context.Client.GetApplicationInfoAsync();
+						var ownerNotification = await application.Owner.GetOrCreateDMChannelAsync();
+
+						var embed = new EmbedBuilder()
+						{
+							Color = new Color(
+								Convert.ToInt32(MathHelper.GetRandomIntegerInRange(random, 1, 255)),
+								Convert.ToInt32(MathHelper.GetRandomIntegerInRange(random, 1, 255)),
+								Convert.ToInt32(MathHelper.GetRandomIntegerInRange(random, 1, 255)))
+						};
+
+						embed.Description = $"Failed to send a picture to Channel {ch.Id} in Guild {g.Name}, Tags: {input}";
+						embed.WithFooter(
+							new EmbedFooterBuilder().WithText("E621/E926 API Request failed!"));
+
+						await ownerNotification.SendMessageAsync("", false, embed);
 					}
 				}
 			}

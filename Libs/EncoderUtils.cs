@@ -1,4 +1,8 @@
-﻿using System;
+﻿// EncoderUtils.cs
+// This class contains several utilizable methods to encode the user files in either
+// Base64 or GZip.Inflate
+
+using System;
 using System.IO;
 using System.IO.Compression;
 using System.Security.Cryptography;

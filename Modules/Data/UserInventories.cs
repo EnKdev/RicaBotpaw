@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿// UserInventories.cs
+// This class contains each property needed to be able to write Users Inventories
+
+using Newtonsoft.Json;
 
 namespace RicaBotpaw.Modules.Data
 {

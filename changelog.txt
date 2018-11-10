@@ -1,12 +1,12 @@
-﻿**__Rica Botpaw - Version 2.0.0-pre6__**
+﻿**__Rica Botpaw - Version 2.0.0-pre7__**
 ---------------------------
--The way files are now stored has gotten a tad bit more secure as I added a little bit of Encryption to the contents, as well as some other encryption methods.
--- Due to this, every file has to be remade, so re-register now, otherwise it probably will error out.
--- (With this, I mean your user, inventory and guild config files.)
--Rica's default first status is now as followed: Rica Botpaw {RBConfig.BotVersion} | {RBConfig.BotSubVersionName}
+- Changed Bot Prefix, replaced buggy user cooldowns with a modificated Ratelimit attribute based on Discord.Addons.Preconditions
+-- New Bot Prefix is `rb!` by the way.
+- The Image Module is now gone for good due to an assembly error. (Thanks assembly <.<)
+-- What still exists is the image searching and random images.
 ---------------------------
 TO-DO:
-Replacing bot-wide cooldown with a user-based cooldown: POST-TESTING [Testing a hotfix...]
+Replacing bot-wide cooldown with a user-based cooldown: EVEN MORE TESTING... (I want to die.)
 Daily-feature: DONE
 Migrating from an SQL Database to a JSON Backend: DONE
 Botshop: EARLY-TEST-STAGE (Non-Public)

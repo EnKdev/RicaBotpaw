@@ -1,4 +1,10 @@
-﻿using System;
+﻿// CommandHandler.cs
+// This class is the handler class for the entire bot.
+// All of the bot's modules are getting registered in here, as well as 
+// With extensive classes like custom typereaders
+// This class can also be used to add for e.g Random Status Strings to the bot.
+
+using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
@@ -93,7 +99,7 @@ namespace RicaBotpaw
 			var context = new CommandContext(_client, msg);
 
 			var argPos = 0;
-			if (msg.HasStringPrefix(";", ref argPos) || msg.HasMentionPrefix(_client.CurrentUser, ref argPos))
+			if (msg.HasStringPrefix("rb!", ref argPos) || msg.HasMentionPrefix(_client.CurrentUser, ref argPos))
 			{
 				var result = await _cmds.ExecuteAsync(context, argPos);
 

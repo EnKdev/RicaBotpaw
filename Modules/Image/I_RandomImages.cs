@@ -1,4 +1,8 @@
-﻿using System;
+﻿// I_RandomImages.cs
+// The random image subclass of ImageModule.cs
+// This is to split the image module into files so that the subclasses have their own file.
+
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -9,7 +13,7 @@ using RicaBotpaw.Logging;
 using Discord;
 using System.IO;
 using Newtonsoft.Json;
-using RicaBotpaw.Cooldown;
+using RicaBotpaw.Attributes;
 using RicaBotpaw.Libs;
 
 namespace RicaBotpaw.Modules.Image
@@ -55,38 +59,22 @@ namespace RicaBotpaw.Modules.Image
 			featEnable = 0;
 		}
 
-		private async Task CheckIfUserIsOnCooldown([Remainder] IUser u = null)
-		{
-			if (u == null) u = Context.User;
-
-			if (UserCooldown.UsersInCooldown.Contains(u))
-			{
-				UserCooldown.UserIsInCooldown = true;
-				ReplyAsync("You're in cooldown! Please wait 5 seconds!");
-			}
-			else
-			{
-				UserCooldown.UserIsInCooldown = false;
-			}
-		}
 
 		/// <summary>
 		/// Random animals!
 		/// </summary>
 		/// <returns></returns>
-		[Command("random", RunMode = RunMode.Async)]
+		[Command("random", RunMode = RunMode.Async), RBRatelimit(1, 5, Measure.Seconds)]
 		[Remarks("Sends you a random image based on the species you entered. Powered by FurBot")]
 		public async Task RandomImage([Remainder] string species = null)
 		{
 			var g = Context.Guild as SocketGuild;
 			var user = Context.Message.Author;
 			await CheckRandomImageFeatureEnabled(g);
-			await CheckIfUserIsOnCooldown(user);
-
+			
 			if (featEnable == 1)
 			{
-				if (UserCooldown.UserIsInCooldown == false)
-				{
+				
 					switch (species)
 					{
 						case "fox":
@@ -108,7 +96,6 @@ namespace RicaBotpaw.Modules.Image
 								string FoxImage = json["file"].ToString();
 
 								await ReplyAsync(FoxImage);
-								UserCooldown.PutInCooldown(user);
 							}
 							break;
 						case "wolf":
@@ -130,7 +117,6 @@ namespace RicaBotpaw.Modules.Image
 								string WolfImage = json["file"].ToString();
 
 								await ReplyAsync(WolfImage);
-								UserCooldown.PutInCooldown(user);
 							}
 							break;
 						case "axolotl":
@@ -152,7 +138,6 @@ namespace RicaBotpaw.Modules.Image
 								string AxoImage = json["file"].ToString();
 
 								await ReplyAsync(AxoImage);
-								UserCooldown.PutInCooldown(user);
 							}
 							break;
 						case "snake":
@@ -174,7 +159,6 @@ namespace RicaBotpaw.Modules.Image
 								string SnakeImage = json["file"].ToString();
 
 								await ReplyAsync(SnakeImage);
-								UserCooldown.PutInCooldown(user);
 							}
 							break;
 						// case "bunny":
@@ -218,16 +202,13 @@ namespace RicaBotpaw.Modules.Image
 								string CatImage = json["file"].ToString();
 
 								await ReplyAsync(CatImage);
-								UserCooldown.PutInCooldown(user);
 							}
 							break;
 						default:
 							await ReplyAsync("Invalid input detected. The only species supported are:\n`fox, wolf, axolotl, snake, cat`");
-							UserCooldown.PutInCooldown(user);
 							return;
 
 					}
-				}
 			}
 			else
 			{

@@ -1,8 +1,13 @@
-﻿using System;
+﻿// AdminModule.cs
+// The class here contains relevant methods to moderate a discord server
+// (Even though it's just the basic contingent)
+
+using System;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using RicaBotpaw.Attributes;
 
 namespace RicaBotpaw.Modules.Admin
 {
@@ -32,7 +37,7 @@ namespace RicaBotpaw.Modules.Admin
 		/// </summary>
 		/// <param name="del">The delete.</param>
 		/// <returns></returns>
-		[Command("purge", RunMode = RunMode.Async)]
+		[Command("purge", RunMode = RunMode.Async), RBRatelimit(1, 5, Measure.Seconds)]
 		[Remarks("Clears the chat by a specified amount of messages.")]
 		[RequireUserPermission(GuildPermission.ManageMessages)]
 		public async Task purge([Remainder] int msgToDelete = 0)
@@ -79,7 +84,7 @@ namespace RicaBotpaw.Modules.Admin
 		/// or
 		/// You must provide a reason
 		/// </exception>
-		[Command("ban", RunMode = RunMode.Async)]
+		[Command("ban", RunMode = RunMode.Async), RBRatelimit(1, 5, Measure.Seconds)]
 		[Remarks("Bans @user")]
 		[RequireUserPermission(GuildPermission.BanMembers)]
 		[RequireBotPermission(GuildPermission.BanMembers)]
@@ -117,7 +122,7 @@ namespace RicaBotpaw.Modules.Admin
 		/// <exception cref="ArgumentException">You must mention a user
 		/// or
 		/// You must provide a reason</exception>
-		[Command("kick", RunMode = RunMode.Async)]
+		[Command("kick", RunMode = RunMode.Async), RBRatelimit(1, 5, Measure.Seconds)]
 		[Remarks("Kicks @user")]
 		[RequireUserPermission(GuildPermission.KickMembers)]
 		[RequireBotPermission(GuildPermission.KickMembers)]
@@ -135,7 +140,7 @@ namespace RicaBotpaw.Modules.Admin
 				var gld = Context.Guild as SocketGuild;
 				var embed = new EmbedBuilder();
 				embed.WithColor(new Color(0x4900ff));
-				embed.Title = $" {user.Username} has been kicked from {user.Guild.Name}";
+				embed.Title = $" {user.Username} has been kicked from {gld.Name}";
 				embed.Description =
 					$"**Username: **{user.Username}\n**Guild Name: **{user.Guild.Name}\n**Kicked by: **{Context.User.Mention}!\n**Reason: **{reason}";
 

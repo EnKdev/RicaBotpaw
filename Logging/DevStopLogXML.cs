@@ -1,4 +1,7 @@
-﻿using System.Xml.Serialization;
+﻿// DevStopLogXML.cs
+// This is the class which contains each XML property for devstop logs.
+
+using System.Xml.Serialization;
 
 namespace RicaBotpaw.Logging
 {

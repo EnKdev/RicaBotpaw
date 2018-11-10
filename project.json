@@ -3,5 +3,18 @@
     "emitEntryPoint": true,
     "copyToOutput": "appsettings.json"
   },
-  "runtimes": { "win10-x64": {} }
+  "frameworks": {
+    "netcoreapp2.0": {
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "version": "2.1.403"
+        }
+      }
+    } 
+  },
+  "runtimes": {
+    "win10-x64": {},
+    "ubuntu.17.10-x64": {},
+    "ubuntu.18.04-x64": {} 
+  }
 }

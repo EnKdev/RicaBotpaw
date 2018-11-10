@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿// Botshops.cs
+// This class contains each needed property so .botshop definition files can be written
+
+using Newtonsoft.Json;
 
 namespace RicaBotpaw.Modules.Data
 {

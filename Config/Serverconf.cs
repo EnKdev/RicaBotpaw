@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿// Serverconf.cs
+// This class contains each property needed to write guild configuration files.
+
+using Newtonsoft.Json;
 
 namespace RicaBotpaw.Config
 {

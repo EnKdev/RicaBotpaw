@@ -1,4 +1,7 @@
-﻿using System;
+﻿// DiscordUser.cs
+// This class contains each property needed to write user files in the bot.
+
+using System;
 using Newtonsoft.Json;
 
 namespace RicaBotpaw.Modules.Data
