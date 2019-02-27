@@ -40,8 +40,9 @@ namespace RicaBotpaw.Modules.Admin
 		[Command("purge", RunMode = RunMode.Async), RBRatelimit(1, 5, Measure.Seconds)]
 		[Remarks("Clears the chat by a specified amount of messages.")]
 		[RequireUserPermission(GuildPermission.ManageMessages)]
-		public async Task purge([Remainder] int msgToDelete = 0)
+		public async Task Purge([Remainder] int msgToDelete = 0)
 		{
+			// Check if the bot has the necessary permissions to purge a set amount of messages from a channel
 			var Bot = await Context.Guild.GetUserAsync(Context.Client.CurrentUser.Id);
 			if (!Bot.GetPermissions(Context.Channel as ITextChannel).ManageMessages)
 			{
@@ -49,8 +50,9 @@ namespace RicaBotpaw.Modules.Admin
 				return;
 			}
 
-			await Context.Message.DeleteAsync();
+			await Context.Message.DeleteAsync(); // Deletes the Error Message up there.
 
+			// Basically the same check as above, this time for user permissions however...
 			var GuildUser = await Context.Guild.GetUserAsync(Context.User.Id);
 			if (!GuildUser.GetPermissions(Context.Channel as ITextChannel).ManageMessages)
 			{
@@ -58,10 +60,12 @@ namespace RicaBotpaw.Modules.Admin
 				return;
 			}
 
+			// This will send if no amount of messages to delete has been specified
 			if (msgToDelete == null)
 				await Context.Channel.SendMessageAsync(
-					"`You need to specify the amount | ;clear (amount) | Replace (amount) with anything`");
+					"`You need to specify the amount | rb!clear (amount) | Replace (amount) with anything`");
 
+			// This is where the deleting-magic happens.
 			var a = 0;
 			foreach (var Item in await Context.Channel.GetMessagesAsync(msgToDelete).Flatten())
 			{
@@ -97,6 +101,7 @@ namespace RicaBotpaw.Modules.Admin
 			var embed = new EmbedBuilder();
 			embed.WithColor(new Color(0x4900ff));
 
+			// Since it's a proprietary bot, I included a method so I can't get banned with this lel
 			if (user.Id == 112559794543468544)
 			{
 				await ReplyAsync("Why are you trying to ban my master?! I won't do that...");

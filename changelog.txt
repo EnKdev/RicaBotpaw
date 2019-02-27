@@ -1,4 +1,4 @@
-﻿**__Rica Botpaw - Version 2.0.0-pre7__**
+﻿**__Rica Botpaw - Version 2.0.0-pre8__**
 ---------------------------
 - Changed Bot Prefix, replaced buggy user cooldowns with a modificated Ratelimit attribute based on Discord.Addons.Preconditions
 -- New Bot Prefix is `rb!` by the way.
@@ -11,4 +11,6 @@ Daily-feature: DONE
 Migrating from an SQL Database to a JSON Backend: DONE
 Botshop: EARLY-TEST-STAGE (Non-Public)
 User Inventories: TESTING [50%]
-Test file encodings and decodings: TESTING [0%]
+Test file encodings and decodings: TESTING [20%]
+Adding a custom scripting language interpreter to Rica so users can create real custom commands: IN DEVELOPMENT [0%]
+Writing a custom scripting language for real custom commands: IN DEVELOPMENT [~5%]

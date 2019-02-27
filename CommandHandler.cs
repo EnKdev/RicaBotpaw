@@ -7,6 +7,7 @@
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Timers;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -20,20 +21,25 @@ namespace RicaBotpaw
 	/// </summary>
 	public class CommandHandler
 	{
+
 		/// <summary>
 		/// The client
 		/// </summary>
 		private DiscordSocketClient _client;
 
 		/// <summary>
-		/// The CMDS
+		/// The CommandService
 		/// </summary>
 		private CommandService _cmds;
 
 		/// <summary>
-		/// a timer
+		/// The timer for Rica's random statuses.
 		/// </summary>
-		private static System.Timers.Timer aTimer;
+		private static Timer aTimer;
+
+		/// <summary>
+		/// Gets the current DateTime
+		/// </summary>
 
 		/// <summary>
 		/// The status strings
@@ -83,7 +89,7 @@ namespace RicaBotpaw
 			await _cmds.AddModulesAsync(Assembly.GetEntryAssembly());
 
 			_client.MessageReceived += HandleCommand;
-			_client.Ready += onReady;
+			_client.Ready += OnReady;
 		}
 
 		/// <summary>
@@ -111,7 +117,7 @@ namespace RicaBotpaw
 		/// When the bot is ready, this will be triggered
 		/// </summary>
 		/// <returns></returns>
-		public async Task onReady()
+		public async Task OnReady()
 		{
 			await _client.SetGameAsync($"Rica Botpaw {RBConfig.BotVersion} | {RBConfig.BotSubVersionName}"); // Default first status.
 			await CheckTime();
@@ -120,7 +126,7 @@ namespace RicaBotpaw
 		public async Task CheckTime()
 		{
 			var signalTime = DateTime.Now;
-			aTimer = new System.Timers.Timer();
+			aTimer = new Timer();
 			aTimer.Interval = 300000; // 2.5 Minutes = 150000 (Testing)
 			aTimer.Elapsed += OnTimedEvent;
 			aTimer.AutoReset = true;
